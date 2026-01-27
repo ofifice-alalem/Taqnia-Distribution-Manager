@@ -1,0 +1,287 @@
+🧠 أولًا: الفكرة العامة للنظام (ملخّص ذهني)
+
+النظام يدير:
+
+بضاعة (Stock)
+
+فواتير (Invoices)
+
+توثيق (Sign + Scan)
+
+ديون (Debts)
+
+تسديدات (Payments)
+
+ويعمل وفق قاعدة ذهبية:
+
+لا حركة مخزون ولا دين بدون فاتورة موثقة
+
+🏭 المرحلة (1): دخول البضاعة من المصنع → أمين المخزن
+🔁 سير العملية
+
+المصنع يسلّم بضاعة
+
+تُنشأ فاتورة رسمية مختومة
+
+أمين المخزن يرفع الفاتورة للنظام
+
+البضاعة تُضاف إلى المخزن الرئيسي
+
+تُسجل حركة رسمية في سجل المخزن
+
+🗃️ الجداول
+1️⃣ factory_invoices
+
+فاتورة إدخال من المصنع
+
+الحقل	النوع	المفتاح	الشرح
+id	INT	PK	معرف الفاتورة
+invoice_number	VARCHAR	UNIQUE	رقم الفاتورة
+keeper_id	INT	FK → users.id	أمين المخزن
+manager_id	INT	FK → users.id	مسؤول المصنع
+stamped_image	VARCHAR	—	صورة الفاتورة المختومة
+created_at	DATETIME	—	تاريخ الإدخال
+2️⃣ factory_invoice_items
+
+تفاصيل المنتجات في فاتورة المصنع
+
+الحقل	النوع	المفتاح
+id	INT	PK
+invoice_id	INT	FK → factory_invoices.id
+product_id	INT	FK → products.id
+quantity	INT	—
+3️⃣ main_stock
+
+المخزن الرئيسي (واحد فقط)
+
+الحقل	النوع	المفتاح
+product_id	INT	PK, FK → products.id
+quantity	INT	—
+updated_at	DATETIME	—
+4️⃣ warehouse_stock_logs
+
+سجل كل حركة على المخزن الرئيسي
+
+الحقل	النوع	المفتاح
+id	INT	PK
+invoice_type	ENUM	—
+invoice_id	INT	FK
+keeper_id	INT	FK → users.id
+action	ENUM	add / withdraw / return
+created_at	DATETIME	—
+🧑‍💼 المرحلة (2): المسوق ↔ أمين المخزن (طلب بضاعة)
+🔁 سير العملية
+
+المسوق يطلب بضاعة
+
+أمين المخزن يوافق أو يرفض
+
+عند الموافقة:
+
+الكمية تُحجز للمسوق
+
+عند حضور المسوق وتوقيعه:
+
+تنتقل من الحجز إلى المخزون الفعلي
+
+🗃️ الجداول
+5️⃣ marketer_requests
+
+فاتورة طلب المسوق
+
+الحقل	النوع	المفتاح
+id	INT	PK
+invoice_number	VARCHAR	UNIQUE
+marketer_id	INT	FK → users.id
+created_at	DATETIME	—
+6️⃣ marketer_request_items
+الحقل	النوع	المفتاح
+id	INT	PK
+request_id	INT	FK → marketer_requests.id
+product_id	INT	FK → products.id
+quantity	INT	—
+7️⃣ marketer_request_status
+
+حالة الطلب
+
+الحقل	النوع	المفتاح
+id	INT	PK
+request_id	INT	FK
+marketer_id	INT	FK
+keeper_id	INT	FK
+status	ENUM	pending / approved / rejected
+updated_at	DATETIME	—
+8️⃣ marketer_reserved_stock
+
+مخزون الحجز للمسوق
+
+الحقل	النوع	المفتاح
+id	INT	PK
+marketer_id	INT	FK
+product_id	INT	FK
+quantity	INT	—
+9️⃣ marketer_actual_stock
+
+مخزون المسوق الفعلي
+
+الحقل	النوع	المفتاح
+id	INT	PK
+marketer_id	INT	FK
+product_id	INT	FK
+quantity	INT	—
+🔟 delivery_confirmation
+
+توثيق استلام المسوق
+
+الحقل	النوع	المفتاح
+id	INT	PK
+request_id	INT	FK
+keeper_id	INT	FK
+signed_image	VARCHAR	
+confirmed_at	DATETIME	
+🏬 المرحلة (3): المسوق ↔ المتجر (بيع Pending)
+🔁 سير العملية
+
+المسوق ينشئ فاتورة بيع
+
+السعر يُنسخ لحظيًا من المنتجات
+
+الكمية تُخصم مؤقتًا من المسوق
+
+البيع يبقى Pending
+
+المتجر غير مُلزم بعد
+
+🗃️ الجداول
+1️⃣1️⃣ sales_invoices
+
+فاتورة بيع
+
+الحقل	النوع	المفتاح
+id	INT	PK
+invoice_number	VARCHAR	UNIQUE
+marketer_id	INT	FK
+store_id	INT	FK
+status	ENUM	pending / approved / cancelled
+created_at	DATETIME	
+1️⃣2️⃣ sales_invoice_items
+
+تفاصيل البيع (بسعر تاريخي)
+
+الحقل	النوع	المفتاح
+id	INT	PK
+invoice_id	INT	FK
+product_id	INT	FK
+quantity	INT	
+unit_price	DECIMAL	
+total_price	DECIMAL	
+1️⃣3️⃣ store_reserved_stock
+
+مخزون المتجر قيد التسوية
+
+الحقل	النوع	المفتاح
+id	INT	PK
+store_id	INT	FK
+product_id	INT	FK
+quantity	INT	
+🧑‍💼 المرحلة (4): توثيق البيع → تسجيل الدين
+🔁 سير العملية
+
+المسوق يسلّم فاتورة مختومة
+
+أمين المخزن يرفع الصورة
+
+البيع يتحول إلى Approved
+
+يُسجل دين على المتجر
+
+تنتقل الكمية إلى مخزون المتجر الفعلي
+
+🗃️ الجداول
+1️⃣4️⃣ sales_confirmation
+الحقل	النوع	المفتاح
+id	INT	PK
+sales_invoice_id	INT	FK
+keeper_id	INT	FK
+stamped_invoice_image	VARCHAR	
+confirmed_at	DATETIME	
+1️⃣5️⃣ store_actual_stock
+الحقل	النوع	المفتاح
+id	INT	PK
+store_id	INT	FK
+product_id	INT	FK
+quantity	INT	
+💰 المرحلة (5): إدارة الأموال (ديون + تسديد)
+🔁 المنطق
+
+كل فاتورة موثقة = دين
+
+كل إرجاع = تخفيض دين
+
+كل تسديد = تخفيض ذمة
+
+لا ربط بين الدفع والفاتورة
+
+🗃️ الجداول
+1️⃣6️⃣ store_debt_ledger
+
+دفتر الذمم
+
+الحقل	النوع	المفتاح
+id	INT	PK
+store_id	INT	FK
+entry_type	ENUM	sale / return
+reference_id	INT	
+amount	DECIMAL	
+created_at	DATETIME	
+1️⃣7️⃣ store_payments
+
+فاتورة تسديد
+
+الحقل	النوع	المفتاح
+id	INT	PK
+payment_number	VARCHAR	UNIQUE
+store_id	INT	FK
+marketer_id	INT	FK
+keeper_id	INT	FK
+amount	DECIMAL	
+payment_method	ENUM	
+receipt_image	VARCHAR	
+created_at	DATETIME	
+🔁 المرحلة (6): الإرجاع (جزئي أو كلي)
+🗃️ الجداول
+1️⃣8️⃣ sales_returns
+الحقل	النوع	المفتاح
+id	INT	PK
+sales_invoice_id	INT	FK
+store_id	INT	FK
+marketer_id	INT	FK
+status	ENUM	pending / approved
+created_at	DATETIME	
+1️⃣9️⃣ sales_return_items
+الحقل	النوع	المفتاح
+id	INT	PK
+return_id	INT	FK
+sales_invoice_item_id	INT	FK
+product_id	INT	FK
+quantity	INT	
+unit_price	DECIMAL	
+2️⃣0️⃣ sales_return_confirmation
+الحقل	النوع	المفتاح
+id	INT	PK
+return_id	INT	FK
+keeper_id	INT	FK
+stamped_image	VARCHAR	
+confirmed_at	DATETIME	
+🧩 جداول أساسية داعمة
+2️⃣1️⃣ products
+
+| id | name | current_price | is_active |
+
+2️⃣2️⃣ users
+
+| id | name | role |
+
+2️⃣3️⃣ stores
+
+| id | name | is_active |
