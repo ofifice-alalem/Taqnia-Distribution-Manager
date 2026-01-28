@@ -1,0 +1,155 @@
+🧑‍💼 جداول أساسية
+1️⃣ users
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف المستخدم
+name	VARCHAR	—	الاسم
+role	ENUM	—	admin / keeper / marketer
+is_active	BOOLEAN	—	حالة الحساب
+2️⃣ products
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف المنتج
+name	VARCHAR	—	اسم المنتج
+current_price	DECIMAL	—	السعر الحالي
+is_active	BOOLEAN	—	متاح للبيع
+3️⃣ stores
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف المتجر
+name	VARCHAR	—	اسم المتجر
+is_active	BOOLEAN	—	حالة المتجر
+🏭 دخول البضاعة من المصنع
+4️⃣ factory_invoices
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف الفاتورة
+invoice_number	VARCHAR	UNIQUE	رقم الفاتورة
+keeper_id	INT	FK → users.id	أمين المخزن
+manager_id	INT	FK → users.id	مسؤول المصنع
+stamped_image	VARCHAR	—	صورة مختومة
+created_at	DATETIME	—	تاريخ الإدخال
+5️⃣ factory_invoice_items
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف
+invoice_id	INT	FK → factory_invoices.id	الفاتورة
+product_id	INT	FK → products.id	المنتج
+quantity	INT	—	الكمية
+6️⃣ main_stock
+الحقل	النوع	العلاقة	الوصف
+product_id	INT	PK, FK → products.id	المنتج
+quantity	INT	—	الكمية الحالية
+updated_at	DATETIME	—	آخر تحديث
+7️⃣ warehouse_stock_logs
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف
+invoice_id	INT	FK	الفاتورة
+invoice_type	ENUM	—	factory / sale / return
+keeper_id	INT	FK → users.id	أمين المخزن
+action	ENUM	—	add / withdraw / return
+created_at	DATETIME	—	التاريخ
+🧑‍💼 طلب المسوق للبضاعة
+8️⃣ marketer_requests
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف الطلب
+invoice_number	VARCHAR	UNIQUE	رقم الطلب
+marketer_id	INT	FK → users.id	المسوق
+created_at	DATETIME	—	تاريخ الطلب
+9️⃣ marketer_request_items
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف
+request_id	INT	FK → marketer_requests.id	الطلب
+product_id	INT	FK → products.id	المنتج
+quantity	INT	—	الكمية
+🔟 marketer_request_status
+الحقل	النوع	العلاقة	الوصف
+request_id	INT	FK → marketer_requests.id	الطلب
+keeper_id	INT	FK → users.id	أمين المخزن
+status	ENUM	—	pending / approved / rejected
+updated_at	DATETIME	—	آخر تحديث
+1️⃣1️⃣ marketer_reserved_stock
+الحقل	النوع	العلاقة	الوصف
+marketer_id	INT	FK → users.id	المسوق
+product_id	INT	FK → products.id	المنتج
+quantity	INT	—	محجوز
+1️⃣2️⃣ marketer_actual_stock
+الحقل	النوع	العلاقة	الوصف
+marketer_id	INT	FK → users.id	المسوق
+product_id	INT	FK → products.id	المنتج
+quantity	INT	—	فعلي
+1️⃣3️⃣ delivery_confirmation
+الحقل	النوع	العلاقة	الوصف
+request_id	INT	FK → marketer_requests.id	الطلب
+keeper_id	INT	FK → users.id	أمين المخزن
+signed_image	VARCHAR	—	صورة توقيع
+confirmed_at	DATETIME	—	تاريخ
+🏬 بيع المتجر
+1️⃣4️⃣ sales_invoices
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف
+invoice_number	VARCHAR	UNIQUE	رقم الفاتورة
+marketer_id	INT	FK → users.id	المسوق
+store_id	INT	FK → stores.id	المتجر
+status	ENUM	—	pending / approved / cancelled
+created_at	DATETIME	—	التاريخ
+1️⃣5️⃣ sales_invoice_items
+الحقل	النوع	العلاقة	الوصف
+invoice_id	INT	FK → sales_invoices.id	الفاتورة
+product_id	INT	FK → products.id	المنتج
+quantity	INT	—	الكمية
+unit_price	DECIMAL	—	سعر تاريخي
+total_price	DECIMAL	—	الإجمالي
+1️⃣6️⃣ sales_confirmation
+الحقل	النوع	العلاقة	الوصف
+sales_invoice_id	INT	FK → sales_invoices.id	الفاتورة
+keeper_id	INT	FK → users.id	أمين المخزن
+stamped_invoice_image	VARCHAR	—	صورة مختومة
+confirmed_at	DATETIME	—	التاريخ
+1️⃣7️⃣ store_actual_stock
+الحقل	النوع	العلاقة	الوصف
+store_id	INT	FK → stores.id	المتجر
+product_id	INT	FK → products.id	المنتج
+quantity	INT	—	فعلي
+💰 النظام المالي (عمولة عند القبض)
+1️⃣8️⃣ store_debt_ledger
+الحقل	النوع	العلاقة	الوصف
+store_id	INT	FK → stores.id	المتجر
+entry_type	ENUM	—	sale / return
+reference_id	INT	FK	الفاتورة
+amount	DECIMAL	—	قيمة
+created_at	DATETIME	—	التاريخ
+1️⃣9️⃣ store_payments (وصل قبض مختوم)
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف
+payment_number	VARCHAR	UNIQUE	رقم الوصل
+store_id	INT	FK → stores.id	المتجر
+marketer_id	INT	FK → users.id	المسوق
+keeper_id	INT	FK → users.id	أمين المخزن
+amount	DECIMAL	—	المبلغ
+receipt_image	VARCHAR	—	صورة مختومة
+created_at	DATETIME	—	التاريخ
+2️⃣0️⃣ salesman_commission_ledger
+الحقل	النوع	العلاقة	الوصف
+salesman_id	INT	FK → users.id	المسوق
+payment_id	INT	FK → store_payments.id	القبض
+amount	DECIMAL	—	العمولة
+created_at	DATETIME	—	التاريخ
+2️⃣1️⃣ salesman_withdraw_requests
+الحقل	النوع	العلاقة	الوصف
+id	INT	PK	معرف
+salesman_id	INT	FK → users.id	المسوق
+requested_amount	DECIMAL	—	المطلوب
+status	ENUM	—	pending / approved
+created_at	DATETIME	—	التاريخ
+2️⃣2️⃣ salesman_withdrawals
+الحقل	النوع	العلاقة	الوصف
+withdraw_request_id	INT	FK → salesman_withdraw_requests.id	الطلب
+keeper_id	INT	FK → users.id	أمين المخزن
+amount	DECIMAL	—	المصروف
+signed_image	VARCHAR	—	صورة توقيع
+created_at	DATETIME	—	التاريخ
+2️⃣3️⃣ store_credits
+الحقل	النوع	العلاقة	الوصف
+store_id	INT	FK → stores.id	المتجر
+amount	DECIMAL	—	الرصيد
+remaining_amount	DECIMAL	—	المتبقي
+source_type	ENUM	—	return / overpayment
+source_id	INT	FK	المصدر
+status	ENUM	—	open / used
+created_at	DATETIME	—	التاريخ
