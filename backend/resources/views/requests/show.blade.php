@@ -6,29 +6,28 @@
 <div class="row">
     <div class="col-md-8">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4><i class="fas fa-file-alt"></i> تفاصيل الطلب #{{ $request->id }}</h4>
-                <span class="badge fs-6
-                    @if($request->status == 'pending') bg-warning
-                    @elseif($request->status == 'approved') bg-success
-                    @else bg-danger
-                    @endif">
-                    @if($request->status == 'pending') قيد المراجعة
-                    @elseif($request->status == 'approved') موافق عليه
-                    @else مرفوض
-                    @endif
-                </span>
+            <div class="card-header">
+                <h4><i class="fas fa-file-alt"></i> تفاصيل الطلب #{{ $request->id }} - 
+                    <span class="badge fs-6
+                        @if(!$request->status || $request->status->status == 'pending') bg-warning
+                        @elseif($request->status->status == 'approved') bg-success
+                        @else bg-danger
+                        @endif">
+                        @if(!$request->status || $request->status->status == 'pending') قيد المراجعة
+                        @elseif($request->status->status == 'approved') موافق عليه
+                        @else مرفوض
+                        @endif
+                    </span>
+                </h4>
             </div>
             
             <div class="card-body">
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <p><strong><i class="fas fa-user"></i> المسوق:</strong> {{ $request->marketer->full_name ?? 'غير محدد' }}</p>
-                        <p><strong><i class="fas fa-user-cog"></i> أمين المخزن:</strong> أي أمين مخزن متاح</p>
                     </div>
                     <div class="col-md-6">
                         <p><strong><i class="fas fa-calendar"></i> تاريخ الطلب:</strong> {{ $request->created_at }}</p>
-                        <p><strong><i class="fas fa-info-circle"></i> الحالة:</strong> {{ $request->status_text }}</p>
                     </div>
                 </div>
 
@@ -88,7 +87,7 @@
                     <i class="fas fa-arrow-right"></i> رجوع للقائمة
                 </a>
                 
-                @if(Auth::user()->isWarehouseKeeper() && $request->status == 'pending')
+                @if(Auth::user()->isWarehouseKeeper() && (!$request->status || $request->status->status == 'pending'))
                     <button type="button" class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#approveModal">
                         <i class="fas fa-check"></i> موافقة
                     </button>
@@ -97,17 +96,25 @@
                         <i class="fas fa-times"></i> رفض
                     </button>
                 @endif
+                
+                @if(Auth::user()->isWarehouseKeeper() && $request->status && $request->status->status == 'approved' && !$documentInfo)
+                    <a href="{{ route('requests.upload-document', $request->id) }}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-camera"></i> توثيق الفاتورة
+                    </a>
+                @endif
             </div>
         </div>
         
-        @if($request->status == 'approved')
+        @if($request->status && $request->status->status == 'approved')
             <div class="card mt-3">
                 <div class="card-header bg-success text-white">
                     <h6><i class="fas fa-info-circle"></i> معلومات الموافقة</h6>
                 </div>
                 <div class="card-body">
                     <p class="mb-1"><strong>تمت الموافقة في:</strong></p>
-                    <p>{{ $request->approved_at->format('Y-m-d H:i') }}</p>
+                    <p>{{ $request->status->created_at ?? now() }}</p>
+                    <p class="mb-1"><strong>أمين المخزن:</strong></p>
+                    <p>{{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
                     <div class="alert alert-success">
                         <small><i class="fas fa-check-circle"></i> تم نقل البضاعة إلى المخزن المحجوز للمسوق</small>
                     </div>
@@ -166,7 +173,7 @@
 </div>
 
 <!-- Modal للموافقة -->
-@if(Auth::user()->isWarehouseKeeper() && $request->status == 'pending')
+@if(Auth::user()->isWarehouseKeeper() && (!$request->status || $request->status->status == 'pending'))
 <div class="modal fade" id="approveModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -215,5 +222,36 @@
         </div>
     </div>
 </div>
+
+<!-- Modal للتوثيق -->
+@if(Auth::user()->isWarehouseKeeper() && $request->status && $request->status->status == 'approved' && !$documentInfo)
+<div class="modal fade" id="documentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">توثيق الفاتورة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('requests.store-document', $request->id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="document_image" class="form-label">صورة الفاتورة المختومة</label>
+                        <input type="file" name="document_image" id="document_image" class="form-control" accept="image/*" required>
+                        <small class="text-muted">يجب أن تكون الصورة بصيغة JPG أو PNG ولا تتجاوز 2MB</small>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> بعد التوثيق سيتم نقل البضاعة من المخزن المحجوز إلى المخزن الفعلي للمسوق
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">تأكيد التوثيق</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
 @endif
 @endsection

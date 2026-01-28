@@ -93,7 +93,7 @@ class ProductRequestController extends Controller
     // عرض تفاصيل طلب
     public function show($id)
     {
-        $request = MarketerRequest::with(['marketer', 'items.product', 'status'])
+        $request = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
             ->findOrFail($id);
             
         // جلب معلومات التوثيق
