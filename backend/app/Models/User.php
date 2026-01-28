@@ -9,8 +9,9 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
+    public $rememberTokenName = null;
 
     /**
      * The attributes that are mass assignable.
@@ -18,9 +19,12 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'username',
+        'password_hash',
+        'full_name',
+        'role_id',
+        'phone',
+        'is_active'
     ];
 
     /**
@@ -41,8 +45,32 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'is_active' => 'boolean'
         ];
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->password_hash;
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function isAdmin()
+    {
+        return $this->role->name === 'admin';
+    }
+
+    public function isWarehouseKeeper()
+    {
+        return $this->role->name === 'warehouse_keeper';
+    }
+
+    public function isSalesman()
+    {
+        return $this->role->name === 'salesman';
     }
 }

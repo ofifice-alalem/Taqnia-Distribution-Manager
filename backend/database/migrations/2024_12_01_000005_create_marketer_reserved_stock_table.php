@@ -12,7 +12,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('marketer_id')->constrained('users');
             $table->foreignId('product_id')->constrained('products');
-            $table->integer('quantity')->default(0);
+            $table->integer('reserved_quantity')->default(0);
+            $table->timestamps();
+            
+            $table->unique(['marketer_id', 'product_id']);
         });
     }
 
