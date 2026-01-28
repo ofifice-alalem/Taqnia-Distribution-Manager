@@ -7,12 +7,12 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h4><i class="fas fa-camera"></i> توثيق الطلب #{{ $request->id }}</h4>
+                <h4><i class="bi bi-camera"></i> توثيق الطلب #{{ $request->id }}</h4>
             </div>
             
             <div class="card-body">
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> 
+                    <i class="bi bi-info-circle"></i> 
                     قم برفع صورة الفاتورة المختومة لتوثيق العملية ونقل البضاعة للمخزن الفعلي للمسوق
                 </div>
 
@@ -27,7 +27,7 @@
                     </div>
                 </div>
 
-                <form action="{{ route('requests.store-document', $request->id) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('warehouse.requests.store-document', $request->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     
                     <div class="mb-3">
@@ -41,11 +41,11 @@
                     </div>
 
                     <div class="d-flex justify-content-between">
-                        <a href="{{ route('requests.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-right"></i> رجوع
+                        <a href="{{ route('warehouse.requests.index') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-right"></i> رجوع
                         </a>
                         <button type="submit" class="btn btn-success">
-                            <i class="fas fa-upload"></i> رفع الصورة وتوثيق الطلب
+                            <i class="bi bi-upload"></i> رفع الصورة وتوثيق الطلب
                         </button>
                     </div>
                 </form>

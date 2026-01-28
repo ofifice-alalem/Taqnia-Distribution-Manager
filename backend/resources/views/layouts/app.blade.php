@@ -438,7 +438,7 @@
             <nav class="sidebar-nav">
                 <div class="nav-group">الرئيسية</div>
                 <ul>
-                    <li><a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('requests.*') ? 'active' : '' }}"><i class="bi bi-list-ul"></i> <span>@auth @if(Auth::user()->isSalesman()) التعبئة و الطلبات السابقة @else الطلبات @endif @else الطلبات @endauth</span></a></li>
+                    <li><a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('marketer.requests.*', 'warehouse.requests.*') ? 'active' : '' }}"><i class="bi bi-list-ul"></i> <span>@auth @if(Auth::user()->isSalesman()) التعبئة و الطلبات السابقة @else الطلبات @endif @else الطلبات @endauth</span></a></li>
                 </ul>
 
                 @auth

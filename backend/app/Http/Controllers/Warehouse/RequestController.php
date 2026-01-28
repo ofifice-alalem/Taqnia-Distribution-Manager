@@ -1,0 +1,150 @@
+<?php
+
+namespace App\Http\Controllers\Warehouse;
+
+use App\Http\Controllers\Controller;
+use App\Models\MainStock;
+use App\Models\MarketerRequest;
+use App\Models\MarketerRequestStatus;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
+class RequestController extends Controller
+{
+    public function index()
+    {
+        $requests = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        $mainStock = DB::table('main_stock')
+            ->join('products', 'main_stock.product_id', '=', 'products.id')
+            ->select('products.name', 'main_stock.quantity', 'products.current_price')
+            ->orderBy('products.name')
+            ->get();
+            
+        return view('warehouse.requests.index', compact('requests', 'mainStock'));
+    }
+
+    public function show($id)
+    {
+        $request = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+            ->findOrFail($id);
+            
+        $documentInfo = DB::table('delivery_confirmation')
+            ->where('request_id', $id)
+            ->first();
+
+        return view('warehouse.requests.show', compact('request', 'documentInfo'));
+    }
+
+    public function approve($id)
+    {
+        $marketerRequest = MarketerRequest::with('items.product')->findOrFail($id);
+
+        foreach ($marketerRequest->items as $item) {
+            $mainStock = MainStock::where('product_id', $item->product_id)->first();
+            if (!$mainStock || $mainStock->quantity < $item->quantity) {
+                return redirect()->back()->with('error', 'الكمية المطلوبة غير متوفرة للمنتج: ' . $item->product->name);
+            }
+        }
+
+        DB::transaction(function() use ($marketerRequest) {
+            MarketerRequestStatus::create([
+                'request_id' => $marketerRequest->id,
+                'marketer_id' => $marketerRequest->marketer_id,
+                'keeper_id' => Auth::id(),
+                'status' => 'approved'
+            ]);
+
+            foreach ($marketerRequest->items as $item) {
+                DB::table('main_stock')
+                    ->where('product_id', $item->product_id)
+                    ->decrement('quantity', $item->quantity);
+
+                DB::table('marketer_reserved_stock')->updateOrInsert(
+                    [
+                        'marketer_id' => $marketerRequest->marketer_id,
+                        'product_id' => $item->product_id
+                    ],
+                    [
+                        'reserved_quantity' => DB::raw('COALESCE(reserved_quantity, 0) + ' . $item->quantity)
+                    ]
+                );
+            }
+        });
+
+        return redirect()->back()->with('success', 'تم الموافقة على الطلب وتحويل البضاعة للمخزن المحجوز');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $marketerRequest = MarketerRequest::findOrFail($id);
+
+        MarketerRequestStatus::create([
+            'request_id' => $marketerRequest->id,
+            'marketer_id' => $marketerRequest->marketer_id,
+            'keeper_id' => Auth::id(),
+            'status' => 'rejected'
+        ]);
+
+        return redirect()->back()->with('success', 'تم رفض الطلب');
+    }
+
+    public function uploadDocument($id)
+    {
+        $request = MarketerRequest::with(['marketer', 'items.product', 'status'])
+            ->findOrFail($id);
+            
+        if (!$request->status || $request->status->status !== 'approved') {
+            return redirect()->back()->with('error', 'يجب الموافقة على الطلب أولاً');
+        }
+
+        return view('warehouse.requests.upload-document', compact('request'));
+    }
+
+    public function storeDocument(Request $request, $id)
+    {
+        $request->validate([
+            'document_image' => 'required|image|mimes:jpeg,png,jpg|max:2048'
+        ]);
+
+        $marketerRequest = MarketerRequest::with('items')->findOrFail($id);
+
+        $fileName = 'invoice_' . time() . '.' . $request->file('document_image')->getClientOriginalExtension();
+        $imagePath = $request->file('document_image')->storeAs(
+            'requests/' . $marketerRequest->invoice_number, 
+            $fileName, 
+            'public'
+        );
+
+        DB::transaction(function() use ($marketerRequest, $imagePath) {
+            foreach ($marketerRequest->items as $item) {
+                DB::table('marketer_reserved_stock')
+                    ->where('marketer_id', $marketerRequest->marketer_id)
+                    ->where('product_id', $item->product_id)
+                    ->decrement('reserved_quantity', $item->quantity);
+
+                DB::table('marketer_actual_stock')->updateOrInsert(
+                    [
+                        'marketer_id' => $marketerRequest->marketer_id,
+                        'product_id' => $item->product_id
+                    ],
+                    [
+                        'quantity' => DB::raw('COALESCE(quantity, 0) + ' . $item->quantity)
+                    ]
+                );
+            }
+
+            DB::table('delivery_confirmation')->insert([
+                'request_id' => $marketerRequest->id,
+                'keeper_id' => Auth::id(),
+                'signed_image' => $imagePath,
+                'confirmed_at' => now()
+            ]);
+        });
+
+        return redirect()->route('warehouse.requests.index')->with('success', 'تم توثيق الطلب ونقل البضاعة للمخزن الفعلي');
+    }
+}

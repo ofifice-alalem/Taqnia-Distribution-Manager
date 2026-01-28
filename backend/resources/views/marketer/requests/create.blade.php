@@ -7,11 +7,11 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h4><i class="fas fa-plus"></i> طلب بضاعة جديد</h4>
+                <h4><i class="bi bi-plus"></i> طلب بضاعة جديد</h4>
             </div>
             
             <div class="card-body">
-                <form action="{{ route('requests.store') }}" method="POST" id="requestForm">
+                <form action="{{ route('marketer.requests.store') }}" method="POST" id="requestForm">
                     @csrf
                     
                     <div class="mb-3">
@@ -36,7 +36,7 @@
                                     </div>
                                     <div class="col-md-2 d-flex align-items-end">
                                         <button type="button" class="btn btn-danger remove-product" disabled>
-                                            <i class="fas fa-trash"></i>
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -44,16 +44,16 @@
                         </div>
                     <div class="mb-3">
                         <button type="button" id="add-product" class="btn btn-outline-primary">
-                            <i class="fas fa-plus"></i> إضافة منتج آخر
+                            <i class="bi bi-plus"></i> إضافة منتج آخر
                         </button>
                     </div>
 
                     <div class="d-flex justify-content-between">
-                        <a href="{{ route('requests.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-right"></i> رجوع
+                        <a href="{{ route('marketer.requests.index') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-right"></i> رجوع
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane"></i> إرسال الطلب
+                            <i class="bi bi-send"></i> إرسال الطلب
                         </button>
                     </div>
                 </form>
@@ -90,7 +90,7 @@ document.getElementById('add-product').addEventListener('click', function() {
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="button" class="btn btn-danger remove-product">
-                    <i class="fas fa-trash"></i>
+                    <i class="bi bi-trash"></i>
                 </button>
             </div>
         </div>
