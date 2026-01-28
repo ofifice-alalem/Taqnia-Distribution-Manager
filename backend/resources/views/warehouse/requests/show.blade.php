@@ -10,11 +10,14 @@
                 <h4><i class="bi bi-file-earmark-text"></i> تفاصيل الطلب #{{ $request->id }} - 
                     <span class="badge fs-6
                         @if(!$request->status || $request->status->status == 'pending') bg-warning
-                        @elseif($request->status->status == 'approved') bg-success
+                        @elseif($request->status->status == 'rejected') bg-danger
+                        @elseif($request->status->status == 'cancelled') bg-warning
                         @else bg-danger
                         @endif">
                         @if(!$request->status || $request->status->status == 'pending') قيد المراجعة
                         @elseif($request->status->status == 'approved') موافق عليه
+                        @elseif($request->status->status == 'rejected') مرفوض
+                        @elseif($request->status->status == 'cancelled') ملغى
                         @else مرفوض
                         @endif
                     </span>
@@ -101,22 +104,52 @@
                     <a href="{{ route('warehouse.requests.upload-document', $request->id) }}" class="btn btn-primary w-100 mb-2">
                         <i class="bi bi-camera"></i> توثيق الفاتورة
                     </a>
+                    
+                    <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                        <i class="bi bi-ban"></i> إلغاء الطلب
+                    </button>
                 @endif
             </div>
         </div>
         
-        @if($request->status && $request->status->status == 'approved')
+        @if($request->status && $request->status->status == 'rejected')
             <div class="card mt-3">
-                <div class="card-header bg-success text-white">
-                    <h6><i class="bi bi-info-circle"></i> معلومات الموافقة</h6>
+                <div class="card-header bg-danger text-white">
+                    <h6><i class="bi bi-x-circle"></i> معلومات الرفض</h6>
                 </div>
                 <div class="card-body">
-                    <p class="mb-1"><strong>تمت الموافقة في:</strong></p>
-                    <p>{{ $request->status->created_at ?? now() }}</p>
+                    <p class="mb-1"><strong>تم الرفض في:</strong></p>
+                    <p>{{ $request->status->updated_at }}</p>
                     <p class="mb-1"><strong>أمين المخزن:</strong></p>
                     <p>{{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
-                    <div class="alert alert-success">
-                        <small><i class="bi bi-check-circle"></i> تم نقل البضاعة إلى المخزن المحجوز للمسوق</small>
+                    @if($request->status->reason)
+                        <p class="mb-1"><strong>سبب الرفض:</strong></p>
+                        <div class="alert alert-danger">
+                            {{ $request->status->reason }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+        
+        @if($request->status && $request->status->status == 'cancelled')
+            <div class="card mt-3">
+                <div class="card-header bg-warning text-white">
+                    <h6><i class="bi bi-ban"></i> معلومات الإلغاء</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>تم الإلغاء في:</strong></p>
+                    <p>{{ $request->status->updated_at }}</p>
+                    <p class="mb-1"><strong>أمين المخزن:</strong></p>
+                    <p>{{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
+                    @if($request->status->reason)
+                        <p class="mb-1"><strong>سبب الإلغاء:</strong></p>
+                        <div class="alert alert-warning">
+                            {{ $request->status->reason }}
+                        </div>
+                    @endif
+                    <div class="alert alert-info">
+                        <small><i class="bi bi-arrow-return-left"></i> تم إرجاع البضاعة للمخزن الرئيسي</small>
                     </div>
                 </div>
             </div>
@@ -222,5 +255,37 @@
         </div>
     </div>
 </div>
+
+<!-- Modal لإلغاء الطلب -->
+@if($request->status && $request->status->status == 'approved' && !$documentInfo)
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إلغاء الطلب</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('warehouse.requests.cancel', $request->id) }}" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        <strong>تحذير:</strong> سيتم إلغاء الطلب وإرجاع الكمية من مخزن المسوق المحجوز إلى المخزن الرئيسي.
+                    </div>
+                    <div class="mb-3">
+                        <label for="cancellation_reason" class="form-label">سبب الإلغاء</label>
+                        <textarea name="cancellation_reason" id="cancellation_reason" class="form-control" rows="3" required placeholder="اكتب سبب إلغاء الطلب..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">تأكيد الإلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
 @endif
 @endsection

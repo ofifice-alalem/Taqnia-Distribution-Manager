@@ -86,7 +86,8 @@ class RequestController extends Controller
             'request_id' => $marketerRequest->id,
             'marketer_id' => $marketerRequest->marketer_id,
             'keeper_id' => Auth::id(),
-            'status' => 'rejected'
+            'status' => 'rejected',
+            'reason' => $request->rejection_reason
         ]);
 
         return redirect()->back()->with('success', 'تم رفض الطلب');
@@ -146,5 +147,61 @@ class RequestController extends Controller
         });
 
         return redirect()->route('warehouse.requests.index')->with('success', 'تم توثيق الطلب ونقل البضاعة للمخزن الفعلي');
+    }
+
+    public function cancel(Request $request, $id)
+    {
+        $request->validate([
+            'cancellation_reason' => 'required|string|max:500'
+        ]);
+
+        $marketerRequest = MarketerRequest::with('items')->findOrFail($id);
+        
+        if (!$marketerRequest->status || $marketerRequest->status->status !== 'approved') {
+            return redirect()->back()->with('error', 'لا يمكن إلغاء هذا الطلب');
+        }
+        
+        $documentExists = DB::table('delivery_confirmation')
+            ->where('request_id', $id)
+            ->exists();
+            
+        if ($documentExists) {
+            return redirect()->back()->with('error', 'لا يمكن إلغاء طلب موثق');
+        }
+
+        DB::transaction(function() use ($marketerRequest, $request) {
+            // 1️⃣ تحديث حالة الطلب إلى cancelled
+            $marketerRequest->status()->update([
+                'status' => 'cancelled',
+                'reason' => $request->cancellation_reason
+            ]);
+
+            // 2️⃣ إرجاع الكمية من الحجز إلى المخزن الرئيسي
+            foreach ($marketerRequest->items as $item) {
+                // خصم من الحجز
+                DB::table('marketer_reserved_stock')
+                    ->where('marketer_id', $marketerRequest->marketer_id)
+                    ->where('product_id', $item->product_id)
+                    ->decrement('reserved_quantity', $item->quantity);
+
+                // إضافة للمخزن الرئيسي
+                DB::table('main_stock')
+                    ->where('product_id', $item->product_id)
+                    ->increment('quantity', $item->quantity);
+
+                // 4️⃣ توثيق الحركة في warehouse_stock_logs
+                DB::table('warehouse_stock_logs')->insert([
+                    'action' => 'return_from_reservation',
+                    'invoice_type' => 'marketer_request',
+                    'invoice_id' => $marketerRequest->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'keeper_id' => Auth::id(),
+                    'created_at' => now()
+                ]);
+            }
+        });
+
+        return redirect()->route('warehouse.requests.index')->with('success', 'تم إلغاء الطلب وإرجاع الكمية للمخزن الرئيسي');
     }
 }

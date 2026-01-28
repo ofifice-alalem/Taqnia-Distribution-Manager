@@ -40,6 +40,7 @@ Route::middleware(['auth', 'role:warehouse_keeper'])->prefix('warehouse')->name(
     Route::get('/requests/{id}', [WarehouseRequestController::class, 'show'])->name('requests.show');
     Route::patch('/requests/{id}/approve', [WarehouseRequestController::class, 'approve'])->name('requests.approve');
     Route::patch('/requests/{id}/reject', [WarehouseRequestController::class, 'reject'])->name('requests.reject');
+    Route::delete('/requests/{id}/cancel', [WarehouseRequestController::class, 'cancel'])->name('requests.cancel');
     Route::get('/requests/{id}/upload-document', [WarehouseRequestController::class, 'uploadDocument'])->name('requests.upload-document');
     Route::post('/requests/{id}/store-document', [WarehouseRequestController::class, 'storeDocument'])->name('requests.store-document');
 });

@@ -11,10 +11,14 @@
                     <span class="badge fs-6
                         @if(!$request->status || $request->status->status == 'pending') bg-warning
                         @elseif($request->status->status == 'approved') bg-success
+                        @elseif($request->status->status == 'rejected') bg-danger
+                        @elseif($request->status->status == 'cancelled') bg-warning
                         @else bg-danger
                         @endif">
                         @if(!$request->status || $request->status->status == 'pending') قيد المراجعة
                         @elseif($request->status->status == 'approved') موافق عليه
+                        @elseif($request->status->status == 'rejected') مرفوض
+                        @elseif($request->status->status == 'cancelled') ملغى
                         @else مرفوض
                         @endif
                     </span>
@@ -95,18 +99,44 @@
             </div>
         </div>
         
-        @if($request->status && $request->status->status == 'approved')
+        @if($request->status && $request->status->status == 'rejected')
             <div class="card mt-3">
-                <div class="card-header bg-success text-white">
-                    <h6><i class="bi bi-info-circle"></i> معلومات الموافقة</h6>
+                <div class="card-header bg-danger text-white">
+                    <h6><i class="bi bi-x-circle"></i> معلومات الرفض</h6>
                 </div>
                 <div class="card-body">
-                    <p class="mb-1"><strong>تمت الموافقة في:</strong></p>
-                    <p>{{ $request->status->created_at ?? now() }}</p>
+                    <p class="mb-1"><strong>تم الرفض في:</strong></p>
+                    <p>{{ $request->status->updated_at }}</p>
                     <p class="mb-1"><strong>أمين المخزن:</strong></p>
                     <p>{{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
-                    <div class="alert alert-success">
-                        <small><i class="bi bi-check-circle"></i> تم نقل البضاعة إلى المخزن المحجوز</small>
+                    @if($request->status->reason)
+                        <p class="mb-1"><strong>سبب الرفض:</strong></p>
+                        <div class="alert alert-danger">
+                            {{ $request->status->reason }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+        
+        @if($request->status && $request->status->status == 'cancelled')
+            <div class="card mt-3">
+                <div class="card-header bg-warning text-white">
+                    <h6><i class="bi bi-ban"></i> معلومات الإلغاء</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>تم الإلغاء في:</strong></p>
+                    <p>{{ $request->status->updated_at }}</p>
+                    <p class="mb-1"><strong>أمين المخزن:</strong></p>
+                    <p>{{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
+                    @if($request->status->reason)
+                        <p class="mb-1"><strong>سبب الإلغاء:</strong></p>
+                        <div class="alert alert-warning">
+                            {{ $request->status->reason }}
+                        </div>
+                    @endif
+                    <div class="alert alert-info">
+                        <small><i class="bi bi-arrow-return-left"></i> تم إرجاع البضاعة للمخزن الرئيسي</small>
                     </div>
                 </div>
             </div>
@@ -121,8 +151,40 @@
                     <p class="mb-2"><strong>تم التوثيق في:</strong> {{ $documentInfo->confirmed_at }}</p>
                     <p class="mb-3"><strong>بواسطة:</strong> أمين المخزن</p>
                     
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#imageModal">
+                            <i class="bi bi-eye"></i> عرض صورة الفاتورة
+                        </button>
+                    </div>
+                    
                     <div class="alert alert-info">
                         <small><i class="bi bi-check-circle"></i> تم نقل البضاعة إلى المخزن الفعلي</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal لعرض الصورة -->
+            <div class="modal fade" id="imageModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">صورة الفاتورة المختومة</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="{{ asset('storage/' . $documentInfo->signed_image) }}" 
+                                 class="img-fluid" 
+                                 alt="صورة الفاتورة"
+                                 style="max-height: 70vh;">
+                        </div>
+                        <div class="modal-footer">
+                            <a href="{{ asset('storage/' . $documentInfo->signed_image) }}" 
+                               target="_blank" 
+                               class="btn btn-primary">
+                                <i class="bi bi-box-arrow-up-right"></i> فتح في نافذة جديدة
+                            </a>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                        </div>
                     </div>
                 </div>
             </div>
