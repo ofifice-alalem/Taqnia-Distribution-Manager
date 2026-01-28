@@ -13,75 +13,50 @@
     </a>
 </div>
 
-<!-- جدول الطلبات -->
-<div class="table-wrapper">
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>رقم الطلب</th>
-                    <th>التاريخ</th>
-                    <th>عدد المنتجات</th>
-                    <th>الحالة</th>
-                    <th>الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($requests as $request)
-                    <tr>
-                        <td>
-                            <div class="request-id">
-                                <i class="bi bi-file-earmark-text"></i>
-                                #{{ $request->id }}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="date-info">
-                                <i class="bi bi-calendar3"></i>
-                                {{ $request->created_at }}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="items-count">
-                                <i class="bi bi-boxes"></i>
-                                {{ $request->items->count() }} منتج
-                            </div>
-                        </td>
-                        <td>
-                            <span class="status-badge 
-                                @if(!$request->status || $request->status->status == 'pending') status-pending
-                                @elseif($request->status->status == 'approved') status-approved
-                                @else status-rejected
-                                @endif">
-                                {{ $request->status_text }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <a href="{{ route('marketer.requests.show', $request->id) }}" class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                
-                                @if(!$request->status || $request->status->status == 'pending')
-                                    <button class="btn btn-sm btn-danger" onclick="cancelRequest({{ $request->id }})" title="إلغاء الطلب">
-                                        <i class="bi bi-x-circle"></i>
-                                    </button>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="text-center py-5">
-                            <div class="empty-state">
-                                <i class="bi bi-inbox"></i>
-                                <p>لا توجد طلبات حالياً</p>
-                            </div>
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+<!-- Tabs -->
+<ul class="nav nav-tabs mb-4" id="requestTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="documented-tab" data-bs-toggle="tab" data-bs-target="#documented" type="button" role="tab">
+            <i class="bi bi-check-circle"></i> موثق ({{ $documentedCount }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="waiting-doc-tab" data-bs-toggle="tab" data-bs-target="#waiting-doc" type="button" role="tab">
+            <i class="bi bi-clock"></i> في انتظار التوثيق ({{ $waitingDocCount }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+            <i class="bi bi-hourglass-split"></i> في انتظار الموافقة ({{ $pendingCount }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected" type="button" role="tab">
+            <i class="bi bi-x-circle"></i> مرفوضة ({{ $rejectedCount }})
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="requestTabsContent">
+    <!-- موثق -->
+    <div class="tab-pane fade show active" id="documented" role="tabpanel">
+        @include('marketer.requests.partials.requests-table', ['requests' => $documentedRequests, 'type' => 'documented'])
+    </div>
+    
+    <!-- في انتظار التوثيق -->
+    <div class="tab-pane fade" id="waiting-doc" role="tabpanel">
+        @include('marketer.requests.partials.requests-table', ['requests' => $waitingDocRequests, 'type' => 'waiting-doc'])
+    </div>
+    
+    <!-- في انتظار الموافقة -->
+    <div class="tab-pane fade" id="pending" role="tabpanel">
+        @include('marketer.requests.partials.requests-table', ['requests' => $pendingRequests, 'type' => 'pending'])
+    </div>
+    
+    <!-- مرفوضة -->
+    <div class="tab-pane fade" id="rejected" role="tabpanel">
+        @include('marketer.requests.partials.requests-table', ['requests' => $rejectedRequests, 'type' => 'rejected'])
     </div>
 </div>
 
@@ -140,10 +115,35 @@
     border: 1px solid #a7f3d0;
 }
 
-.status-rejected {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
+.status-documented {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+.nav-tabs .nav-link {
+    color: var(--text-main);
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: none;
+    padding: 12px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: none;
+}
+
+.nav-tabs {
+    border-bottom: 1px solid var(--border);
 }
 
 .action-buttons {

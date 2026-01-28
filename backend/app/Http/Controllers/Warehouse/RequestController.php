@@ -14,7 +14,48 @@ class RequestController extends Controller
 {
     public function index()
     {
-        $requests = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+        // موثق - له delivery_confirmation
+        $documentedRequests = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+            ->whereHas('status', function($q) {
+                $q->where('status', 'approved');
+            })
+            ->whereExists(function($q) {
+                $q->select(DB::raw(1))
+                  ->from('delivery_confirmation')
+                  ->whereRaw('delivery_confirmation.request_id = marketer_requests.id');
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        // في انتظار التوثيق - موافق عليه ولكن لا يوجد delivery_confirmation
+        $waitingDocRequests = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+            ->whereHas('status', function($q) {
+                $q->where('status', 'approved');
+            })
+            ->whereNotExists(function($q) {
+                $q->select(DB::raw(1))
+                  ->from('delivery_confirmation')
+                  ->whereRaw('delivery_confirmation.request_id = marketer_requests.id');
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        // في انتظار الموافقة - pending أو لا يوجد status
+        $pendingRequests = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+            ->where(function($q) {
+                $q->whereDoesntHave('status')
+                  ->orWhereHas('status', function($subQ) {
+                      $subQ->where('status', 'pending');
+                  });
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        // مرفوضة - rejected أو cancelled
+        $rejectedRequests = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+            ->whereHas('status', function($q) {
+                $q->whereIn('status', ['rejected', 'cancelled']);
+            })
             ->orderBy('created_at', 'desc')
             ->get();
             
@@ -24,7 +65,15 @@ class RequestController extends Controller
             ->orderBy('products.name')
             ->get();
             
-        return view('warehouse.requests.index', compact('requests', 'mainStock'));
+        $documentedCount = $documentedRequests->count();
+        $waitingDocCount = $waitingDocRequests->count();
+        $pendingCount = $pendingRequests->count();
+        $rejectedCount = $rejectedRequests->count();
+
+        return view('warehouse.requests.index', compact(
+            'documentedRequests', 'waitingDocRequests', 'pendingRequests', 'rejectedRequests',
+            'documentedCount', 'waitingDocCount', 'pendingCount', 'rejectedCount', 'mainStock'
+        ));
     }
 
     public function show($id)
