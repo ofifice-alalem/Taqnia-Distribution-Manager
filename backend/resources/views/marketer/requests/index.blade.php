@@ -136,11 +136,6 @@
     color: var(--primary);
 }
 
-.nav-tabs .nav-link.active {
-    color: var(--primary);
-    border-bottom-color: var(--primary);
-    background: none;
-}
 
 .nav-tabs {
     border-bottom: 1px solid var(--border);

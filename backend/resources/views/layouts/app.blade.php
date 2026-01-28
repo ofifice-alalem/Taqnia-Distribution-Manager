@@ -130,6 +130,8 @@
             flex: 1;
             overflow-y: auto;
             padding: 15px 5px;
+            display: flex;
+            flex-direction: column;
         }
 
         .nav-group {
@@ -517,31 +519,55 @@
 
         /* Tabs Styling */
         .nav-tabs {
-            border-bottom: 2px solid var(--border);
+            border-bottom: none;
             gap: 0;
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+
+        .nav-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .nav-tabs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .nav-tabs::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .nav-tabs::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
         }
 
         .nav-tabs .nav-link {
-            border: none;
+            border: 1px solid var(--border);
             color: var(--text-muted);
-            padding: 12px 20px;
+            padding: 12px 16px;
             font-weight: 500;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-            border-radius: 0;
-            background: none;
+            margin: 0 4px 0 0;
+            border-radius: 8px;
+            background: transparent;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: fit-content;
         }
 
         .nav-tabs .nav-link:hover {
-            border-bottom-color: var(--primary);
-            color: var(--primary);
-            background: none;
+            background: var(--bg-main);
+            color: var(--text-main);
+            border-color: var(--border);
         }
 
         .nav-tabs .nav-link.active {
-            border-bottom-color: var(--primary);
-            color: var(--primary);
-            background: none;
+            background: var(--primary) ;
+            color: white !important;
+            border-color: var(--primary);
             box-shadow: none;
         }
 
@@ -559,21 +585,69 @@
         }
 
         @media (max-width: 768px) {
+            .nav-tabs .nav-link {
+                padding: 10px 12px;
+                font-size: 0.85em;
+                border: solid 2px #5d9ff1;
+                border-radius: 20px;
+                margin: 0 8px 0 0;
+            }
+
+            .nav-tabs {
+                flex-wrap: nowrap;
+                padding-left: 0;
+                padding-right: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
-                right: -300px;
+                right: -260px;
                 top: 0;
                 bottom: 0;
-                width: 300px;
+                width: 260px;
                 box-shadow: -20px 0 60px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                transition: right 0.3s ease;
             }
 
             .sidebar.open {
                 right: 0;
             }
 
+            .app-container {
+                position: relative;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .top-bar {
+                padding: 0 20px;
+            }
+
             .content-viewer {
-                padding: 30px 20px;
+                padding: 20px 15px;
+            }
+
+            .card {
+                margin-bottom: 15px;
+            }
+
+            .col-md-8, .col-md-4 {
+                width: 100% !important;
+                margin-bottom: 15px;
+            }
+
+            .table {
+                font-size: 0.85em;
+            }
+
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.85em;
             }
         }
     </style>
@@ -611,24 +685,41 @@
                     </ul>
                     @endif
                 @endauth
+
+                @auth
+                <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <div class="user-info d-md-none" style="padding: 15px 0; border-bottom: 1px solid var(--border); margin-bottom: 15px;">
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <span style="font-weight: 600;">{{ Auth::user()->name }}</span>
+                            <span class="user-role">{{ Auth::user()->role->name }}</span>
+                        </div>
+                    </div>
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="nav-link d-md-none" style="color: #ef4444;">
+                        <i class="bi bi-box-arrow-right"></i> <span>تسجيل الخروج</span>
+                    </a>
+                </div>
+                @endauth
             </nav>
         </aside>
 
         <main class="main-content">
             <header class="top-bar">
                 <div class="top-bar-start">
+                    <button type="button" class="btn-menu d-md-none" id="sidebarToggle" style="background: none; border: none; color: var(--text-main); font-size: 1.3em; cursor: pointer;">
+                        <i class="bi bi-list"></i>
+                    </button>
                     <h1>@yield('title', 'نظام إدارة التوزيع')</h1>
                 </div>
                 <div class="top-bar-end">
-                    <button type="button" class="theme-toggle" id="themeToggle" title="تبديل الوضع الداكن">
+                    <button type="button" class="theme-toggle d-flex" id="themeToggle" title="تبديل الوضع الداكن">
                         <i class="bi bi-moon-stars"></i>
                     </button>
                     @auth
-                        <div class="user-info">
-                            <span>مرحباً، {{ Auth::user()->name }}</span>
+                        <div class="user-info d-none d-md-flex">
+                            <span>{{ Auth::user()->name }}</span>
                             <span class="user-role">{{ Auth::user()->role->name }}</span>
                         </div>
-                        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="icon-btn" title="خروج">
+                        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="icon-btn d-none d-md-flex" title="خروج">
                             <i class="bi bi-box-arrow-right"></i>
                         </a>
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
@@ -662,6 +753,23 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Sidebar Toggle
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.querySelector('.sidebar');
+        
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        }
+
+        // Theme Toggle
         document.addEventListener('DOMContentLoaded', function() {
             const themeToggle = document.getElementById('themeToggle');
             const html = document.documentElement;

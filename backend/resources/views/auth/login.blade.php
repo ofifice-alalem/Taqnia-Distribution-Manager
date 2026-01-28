@@ -317,8 +317,8 @@
                 @csrf
 
                 <div class="form-group">
-                    <label class="form-label" for="email">البريد الإلكتروني</label>
-                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" placeholder="أدخل بريدك الإلكتروني" required autofocus>
+                    <label class="form-label" for="email">اسم المستخدم أو البريد الإلكتروني</label>
+                    <input type="text" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" placeholder="أدخل اسم المستخدم أو بريدك الإلكتروني" required autofocus>
                     @error('email')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -340,6 +340,15 @@
                     @if (Route::has('password.request'))
                         <a href="{{ route('password.request') }}" class="forgot-link">هل نسيت كلمة المرور؟</a>
                     @endif
+                </div>
+
+                <div class="alert alert-info" style="font-size: 0.85em;">
+                    <strong><i class="bi bi-info-circle"></i> بيانات تجريبية:</strong><br>
+                    <small>
+                        <strong>مسوق:</strong> salesman / password<br>
+                        <strong>أمين مخزن:</strong> warehouse / password<br>
+                        <strong>مسؤول:</strong> admin / password
+                    </small>
                 </div>
 
                 <button type="submit" class="btn-login">
