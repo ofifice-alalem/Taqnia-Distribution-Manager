@@ -99,6 +99,23 @@
             </div>
         </div>
         
+        @if($request->status && $request->status->status == 'approved')
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h6><i class="bi bi-check-circle"></i> معلومات الموافقة</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>تم الموافقة في:</strong></p>
+                    <p>{{ $request->status->updated_at }}</p>
+                    <p class="mb-1"><strong>أمين المخزن:</strong></p>
+                    <p>{{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
+                    <div class="alert alert-success">
+                        <small><i class="bi bi-check-circle"></i> تم نقل البضاعة إلى مخزون الحجز</small>
+                    </div>
+                </div>
+            </div>
+        @endif
+        
         @if($request->status && $request->status->status == 'rejected')
             <div class="card mt-3">
                 <div class="card-header bg-danger text-white">

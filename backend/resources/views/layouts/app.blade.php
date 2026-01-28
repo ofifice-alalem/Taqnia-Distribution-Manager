@@ -9,11 +9,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/utilities.css') }}">
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
     <style>
         :root {
-            --primary: #2563eb;
+            --primary: #3b82f6;
             --primary-light: #eff6ff;
-            --primary-glow: rgba(37, 99, 235, 0.15);
+            --primary-glow: rgba(59, 130, 246, 0.15);
             --bg-main: #f8fafc;
             --bg-sidebar: #ffffff;
             --bg-card: #ffffff;
@@ -31,6 +38,28 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        html[data-theme="dark"] {
+            --primary: #60a5fa;
+            --primary-light: #1e3a8a;
+            --primary-glow: rgba(96, 165, 250, 0.15);
+            --bg-main: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-card: #1e293b;
+            --text-main: #cbd5e1;
+            --text-heading: #f1f5f9;
+            --text-muted: #64748b;
+            --border: #334155;
+            --border-hover: #475569;
+        }
+
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
         body {
             font-family: 'Cairo', 'Outfit', sans-serif;
             background-color: var(--bg-main);
@@ -46,7 +75,6 @@
             height: 100vh;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 280px;
             background: var(--bg-sidebar);
@@ -54,7 +82,6 @@
             display: flex;
             flex-direction: column;
             z-index: 100;
-            transition: var(--transition);
         }
 
         .sidebar-header {
@@ -71,7 +98,7 @@
         .logo-icon {
             width: 42px;
             height: 42px;
-            background: linear-gradient(135deg, var(--primary), #1d4ed8);
+            background: linear-gradient(135deg, var(--primary), #1e40af);
             color: white;
             display: flex;
             align-items: center;
@@ -133,7 +160,6 @@
             text-decoration: none;
             border-radius: 12px;
             font-weight: 600;
-            transition: var(--transition);
             margin-bottom: 6px;
             font-size: 0.9em;
             position: relative;
@@ -143,7 +169,6 @@
         .nav-link i {
             font-size: 1.25em;
             opacity: 0.6;
-            transition: var(--transition);
         }
 
         .nav-link:hover {
@@ -163,7 +188,6 @@
             transform: scale(1.1);
         }
 
-        /* Main Content */
         .main-content {
             flex: 1;
             display: flex;
@@ -229,12 +253,33 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: var(--transition);
             box-shadow: var(--shadow-sm);
             text-decoration: none;
         }
 
         .icon-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle {
+            width: 42px;
+            height: 42px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            text-decoration: none;
+        }
+
+        .theme-toggle:hover {
             background: var(--primary-light);
             border-color: var(--primary);
             color: var(--primary);
@@ -258,7 +303,6 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-md);
-            transition: var(--transition);
             overflow: hidden;
         }
 
@@ -283,17 +327,17 @@
             border-radius: var(--radius-md);
             font-weight: 600;
             padding: 10px 20px;
-            transition: var(--transition);
             border: none;
         }
 
         .btn-primary {
             background: var(--primary);
             box-shadow: 0 4px 12px var(--primary-glow);
+            color: white;
         }
 
         .btn-primary:hover {
-            background: #1d4ed8;
+            background: #2563eb;
             transform: translateY(-2px);
         }
 
@@ -312,31 +356,93 @@
             color: white;
         }
 
+        /* Override Bootstrap Table Styles */
         .table {
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
+            background-color: var(--bg-card) !important;
+            color: var(--text-main) !important;
+        }
+
+        .table thead {
+            background-color: var(--bg-main) !important;
         }
 
         .table thead th {
-            background: var(--bg-main);
-            border-bottom: 2px solid var(--border);
-            font-weight: 800;
-            color: var(--text-muted);
-            font-size: 0.85em;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 16px;
+            background-color: var(--bg-main) !important;
+            color: var(--text-muted) !important;
+            border-color: var(--border) !important;
         }
 
         .table tbody td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-main);
+            background-color: var(--bg-card) !important;
+            color: var(--text-main) !important;
+            border-color: var(--border) !important;
         }
 
         .table tbody tr:hover {
-            background: var(--primary-light);
+            background-color: var(--primary-light) !important;
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: var(--bg-card) !important;
+        }
+
+        .table-striped tbody tr:nth-of-type(even) {
+            background-color: var(--bg-card) !important;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: var(--primary-light) !important;
+            color: var(--text-main) !important;
+        }
+
+        /* Text and Content Styles */
+        p, span, div, li, label, h1, h2, h3, h4, h5, h6 {
+            color: var(--text-main);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-heading);
+        }
+
+        a {
+            color: var(--primary);
+        }
+
+        a:hover {
+            color: #2563eb;
+        }
+
+        /* Detail View Styles */
+        .detail-section {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .detail-value {
+            color: var(--text-main);
+        }
+
+        /* Badge and Status Styles */
+        .badge {
+            background-color: var(--primary) !important;
+            color: white !important;
+        }
+
+        .badge-success {
+            background-color: #10b981 !important;
+        }
+
+        .badge-warning {
+            background-color: #f59e0b !important;
+        }
+
+        .badge-danger {
+            background-color: #ef4444 !important;
         }
 
         .badge {
@@ -381,18 +487,22 @@
             border-radius: var(--radius-md);
             border: 1px solid var(--border);
             padding: 12px 16px;
-            transition: var(--transition);
+            background: var(--bg-card);
+            color: var(--text-main);
         }
 
         .form-control:focus, .form-select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px var(--primary-glow);
+            background: var(--bg-card);
+            color: var(--text-main);
         }
 
         .modal-content {
             border-radius: var(--radius-lg);
             border: none;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            background: var(--bg-card);
         }
 
         .modal-header {
@@ -403,6 +513,49 @@
 
         .modal-body {
             padding: 30px;
+        }
+
+        /* Tabs Styling */
+        .nav-tabs {
+            border-bottom: 2px solid var(--border);
+            gap: 0;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--text-muted);
+            padding: 12px 20px;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            border-radius: 0;
+            background: none;
+        }
+
+        .nav-tabs .nav-link:hover {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            background: none;
+        }
+
+        .nav-tabs .nav-link.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            background: none;
+            box-shadow: none;
+        }
+
+        .tab-content {
+            padding: 20px 0;
+        }
+
+        .tab-pane {
+            animation: fadeIn 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         @media (max-width: 768px) {
@@ -427,7 +580,6 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
@@ -462,13 +614,15 @@
             </nav>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
                 <div class="top-bar-start">
                     <h1>@yield('title', 'نظام إدارة التوزيع')</h1>
                 </div>
                 <div class="top-bar-end">
+                    <button type="button" class="theme-toggle" id="themeToggle" title="تبديل الوضع الداكن">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
                     @auth
                         <div class="user-info">
                             <span>مرحباً، {{ Auth::user()->name }}</span>
@@ -507,6 +661,35 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme') || 'light';
+
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    html.setAttribute('data-theme', 'dark');
+                    if (themeToggle) themeToggle.innerHTML = '<i class="bi bi-sun"></i>';
+                } else {
+                    html.removeAttribute('data-theme');
+                    if (themeToggle) themeToggle.innerHTML = '<i class="bi bi-moon-stars"></i>';
+                }
+                localStorage.setItem('theme', theme);
+            }
+
+            setTheme(savedTheme);
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const currentTheme = html.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    setTheme(newTheme);
+                });
+            }
+        });
+    </script>
     @yield('scripts')
 </body>
 </html>
