@@ -94,9 +94,10 @@ class SalesInvoiceController extends Controller
             'items' => $invoice->items->map(function($item) use ($arabic) {
                 return (object)[
                     'name' => $arabic->utf8Glyphs($item->product->name),
-                    'quantity' => $item->quantity,
+                    'quantity' => $item->quantity + $item->free_quantity,
+                    'freeQty' => $item->free_quantity,
                     'price' => $item->unit_price,
-                    'total' => $item->total_price
+                    'total' => $item->quantity * $item->unit_price
                 ];
             }),
             'total' => $invoice->total_amount,
@@ -110,6 +111,7 @@ class SalesInvoiceController extends Controller
                 'keeper' => $arabic->utf8Glyphs('أمين المخزن'),
                 'product' => $arabic->utf8Glyphs('المنتج'),
                 'quantity' => $arabic->utf8Glyphs('الكمية'),
+                'discount' => $arabic->utf8Glyphs('التخفيض'),
                 'price' => $arabic->utf8Glyphs('السعر'),
                 'total' => $arabic->utf8Glyphs('الإجمالي'),
                 'grandTotal' => $arabic->utf8Glyphs('الإجمالي الكلي'),
@@ -129,11 +131,12 @@ class SalesInvoiceController extends Controller
             ->findOrFail($id);
 
         \DB::transaction(function () use ($invoice) {
-            // إرجاع الكمية لمخزون المسوق
+            // إرجاع الكمية لمخزون المسوق (الكمية الكلية)
             foreach ($invoice->items as $item) {
+                $totalQuantity = $item->quantity + $item->free_quantity;
                 \App\Models\Stock\MarketerActualStock::where('marketer_id', $invoice->marketer_id)
                     ->where('product_id', $item->product_id)
-                    ->increment('quantity', $item->quantity);
+                    ->increment('quantity', $totalQuantity);
             }
 
             // حذف من المخزون المرحلي
@@ -154,6 +157,8 @@ class SalesInvoiceController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.free_quantity' => 'nullable|integer|min:0',
+            'items.*.promotion_id' => 'nullable|exists:product_promotions,id',
         ]);
 
         try {

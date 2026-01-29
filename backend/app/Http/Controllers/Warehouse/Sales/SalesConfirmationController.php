@@ -59,16 +59,9 @@ class SalesConfirmationController extends Controller
                 $request->file('stamped_invoice_image')
             );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'تم توثيق البيع بنجاح',
-                'data' => $invoice
-            ], 200);
+            return redirect()->route('warehouse.sales.index')->with('success', 'تم توثيق البيع بنجاح');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 }

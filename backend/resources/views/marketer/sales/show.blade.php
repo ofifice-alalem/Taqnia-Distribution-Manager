@@ -13,9 +13,11 @@
                 <a href="{{ route('marketer.sales.index') }}" class="btn btn-secondary w-100 mb-2">
                     <i class="bi bi-arrow-right"></i> رجوع للقائمة
                 </a>
-                <a href="{{ route('marketer.sales.print', $invoice->id) }}" class="btn btn-primary w-100 mb-2" target="_blank">
-                    <i class="bi bi-printer"></i> طباعة الفاتورة
-                </a>
+                @if($invoice->status != 'approved')
+                    <a href="{{ route('marketer.sales.print', $invoice->id) }}" class="btn btn-primary w-100 mb-2" target="_blank">
+                        <i class="bi bi-printer"></i> طباعة الفاتورة
+                    </a>
+                @endif
                 @if($invoice->status == 'pending')
                     <button type="button" class="btn btn-danger w-100" onclick="cancelInvoice({{ $invoice->id }})">
                         <i class="bi bi-x-circle"></i> إلغاء الفاتورة
@@ -31,9 +33,52 @@
                 </div>
                 <div class="card-body">
                     <p><strong>تم التوثيق في:</strong> {{ $invoice->confirmed_at }}</p>
-                    <p><strong>أمين المخزن:</strong> {{ $invoice->keeper->full_name }}</p>
+                    <p class="mb-3"><strong>أمين المخزن:</strong> {{ $invoice->keeper->full_name }}</p>
+                    
+                    @if($invoice->stamped_invoice_image)
+                        <button type="button" class="btn btn-info w-100" onclick="loadInvoiceImage()">
+                            <i class="bi bi-image"></i> عرض الصورة الموثقة
+                        </button>
+                    @endif
                 </div>
             </div>
+            
+            @if($invoice->stamped_invoice_image)
+            <div class="modal fade" id="imageModal" tabindex="-1">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">صورة الفاتورة المختومة</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center" style="background: #f8f9fa;">
+                            <img id="invoiceImage" src="" 
+                                 class="img-fluid" 
+                                 alt="صورة الفاتورة"
+                                 style="max-height: 80vh; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none;">
+                            <div id="imageLoader" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-muted">جاري تحميل الصورة...</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <a id="downloadLink" href="" download class="btn btn-success" style="display: none;">
+                                <i class="bi bi-download"></i> تحميل
+                            </a>
+                            <a id="openImageLink" href="" 
+                               target="_blank" 
+                               class="btn btn-primary"
+                               style="display: none;">
+                                <i class="bi bi-box-arrow-up-right"></i> فتح في نافذة جديدة
+                            </a>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
         @endif
     </div>
     
@@ -74,6 +119,7 @@
                             <tr>
                                 <th>المنتج</th>
                                 <th>الكمية</th>
+                                <th>التخفيض</th>
                                 <th>السعر</th>
                                 <th>الإجمالي</th>
                             </tr>
@@ -82,15 +128,22 @@
                             @foreach($invoice->items as $item)
                                 <tr>
                                     <td>{{ $item->product->name }}</td>
-                                    <td>{{ $item->quantity }}</td>
+                                    <td>{{ $item->quantity + $item->free_quantity }}</td>
+                                    <td>
+                                        @if($item->free_quantity > 0)
+                                            <span class="badge bg-success">{{ $item->free_quantity }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                     <td>{{ number_format($item->unit_price, 2) }} د.ع</td>
-                                    <td>{{ number_format($item->total_price, 2) }} د.ع</td>
+                                    <td>{{ number_format($item->quantity * $item->unit_price, 2) }} د.ع</td>
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot>
                             <tr class="table-dark">
-                                <th colspan="3">الإجمالي</th>
+                                <th colspan="4">الإجمالي</th>
                                 <th>{{ number_format($invoice->total_amount, 2) }} د.ع</th>
                             </tr>
                         </tfoot>
@@ -102,10 +155,31 @@
 </div>
 
 <script>
-function cancelInvoice(id) {
-    if(confirm('هل أنت متأكد من إلغاء هذه الفاتورة؟')) {
-        window.location.href = `/marketer/sales/${id}/cancel`;
+let imageLoaded = false;
+
+function loadInvoiceImage() {
+    if (!imageLoaded) {
+        const invoiceImage = document.getElementById('invoiceImage');
+        const imageLoader = document.getElementById('imageLoader');
+        const openImageLink = document.getElementById('openImageLink');
+        const downloadLink = document.getElementById('downloadLink');
+        const imagePath = "{{ $invoice->stamped_invoice_image ? asset('storage/' . $invoice->stamped_invoice_image) : '' }}";
+        
+        invoiceImage.onload = function() {
+            imageLoader.style.display = 'none';
+            invoiceImage.style.display = 'block';
+            openImageLink.style.display = 'inline-block';
+            downloadLink.style.display = 'inline-block';
+            imageLoaded = true;
+        };
+        
+        invoiceImage.src = imagePath;
+        openImageLink.href = imagePath;
+        downloadLink.href = imagePath;
     }
+    
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    modal.show();
 }
 </script>
 @endsection

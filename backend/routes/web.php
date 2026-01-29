@@ -6,6 +6,7 @@ use App\Http\Controllers\Marketer\RequestController as MarketerRequestController
 use App\Http\Controllers\Marketer\StockController as MarketerStockController;
 use App\Http\Controllers\Marketer\Returns\ReturnController as MarketerReturnController;
 use App\Http\Controllers\Marketer\Sales\SalesInvoiceController;
+use App\Http\Controllers\Marketer\Promotions\PromotionController as MarketerPromotionController;
 use App\Http\Controllers\Warehouse\RequestController as WarehouseRequestController;
 use App\Http\Controllers\Warehouse\Returns\ReturnController as WarehouseReturnController;
 use App\Http\Controllers\Warehouse\Sales\SalesConfirmationController;
@@ -41,6 +42,8 @@ Route::middleware(['auth', 'role:salesman'])->prefix('marketer')->name('marketer
     Route::get('/requests/{id}/print', [MarketerRequestController::class, 'printInvoice'])->name('requests.print');
     
     Route::get('/stock', [MarketerStockController::class, 'index'])->name('stock');
+    
+    Route::get('/promotions', [MarketerPromotionController::class, 'index'])->name('promotions.index');
     
     Route::get('/returns', [MarketerReturnController::class, 'index'])->name('returns.index');
     Route::get('/returns/create', [MarketerReturnController::class, 'create'])->name('returns.create');

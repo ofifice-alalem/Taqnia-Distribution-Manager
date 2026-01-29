@@ -59,6 +59,7 @@
             <tr>
                 <th>{{ $labels['total'] }}</th>
                 <th>{{ $labels['price'] }}</th>
+                <th>{{ $labels['discount'] }}</th>
                 <th>{{ $labels['quantity'] }}</th>
                 <th>{{ $labels['product'] }}</th>
                 <th>#</th>
@@ -69,6 +70,13 @@
             <tr>
                 <td>{{ $labels['currency'] }} {{ number_format($item->total, 2) }}</td>
                 <td>{{ $labels['currency'] }} {{ number_format($item->price, 2) }}</td>
+                <td>
+                    @if($item->freeQty > 0)
+                        {{ $item->freeQty }}
+                    @else
+                        -
+                    @endif
+                </td>
                 <td>{{ $item->quantity }}</td>
                 <td>{{ $item->name }}</td>
                 <td>{{ $index + 1 }}</td>
@@ -76,7 +84,7 @@
             @endforeach
             <tr class="total-row">
                 <td>{{ $labels['currency'] }} {{ number_format($total, 2) }}</td>
-                <td colspan="4">{{ $labels['grandTotal'] }}</td>
+                <td colspan="5">{{ $labels['grandTotal'] }}</td>
             </tr>
         </tbody>
     </table>

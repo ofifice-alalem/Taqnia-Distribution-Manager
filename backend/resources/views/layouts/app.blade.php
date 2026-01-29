@@ -668,6 +668,7 @@
                     @auth
                         @if(Auth::user()->isSalesman())
                         <li><a href="{{ route('marketer.stock') }}" class="nav-link {{ request()->routeIs('marketer.stock') ? 'active' : '' }}"><i class="bi bi-box-seam"></i> <span>مخزوني</span></a></li>
+                        <li><a href="{{ route('marketer.promotions.index') }}" class="nav-link {{ request()->routeIs('marketer.promotions.*') ? 'active' : '' }}"><i class="bi bi-gift"></i> <span>التخفيضات</span></a></li>
                         <li><a href="{{ route('marketer.sales.index') }}" class="nav-link {{ request()->routeIs('marketer.sales.*') ? 'active' : '' }}"><i class="bi bi-receipt"></i> <span>فواتير البيع</span></a></li>
                         <li><a href="{{ route('marketer.returns.index') }}" class="nav-link {{ request()->routeIs('marketer.returns.*') ? 'active' : '' }}"><i class="bi bi-arrow-return-left"></i> <span>إرجاع بضاعة</span></a></li>
                         @endif

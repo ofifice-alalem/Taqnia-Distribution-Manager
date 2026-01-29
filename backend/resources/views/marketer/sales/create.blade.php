@@ -50,19 +50,24 @@
                                         <label class="form-label">الكمية</label>
                                         <input type="number" name="items[0][quantity]" class="form-control quantity-input" min="1" required>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-2 free-quantity-col" style="display:none;">
                                         <label class="form-label">هدية</label>
                                         <input type="number" name="items[0][free_quantity]" class="form-control free-quantity-input" value="0" readonly>
                                         <input type="hidden" name="items[0][promotion_id]" class="promotion-id-input">
                                     </div>
-                                    <div class="col-md-2 d-flex align-items-end">
+                                    <div class="col-md-2 d-flex align-items-end remove-btn-col">
                                         <button type="button" class="btn btn-danger remove-product" disabled>
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
                                 </div>
+                                <div class="promo-info" style="display:none; margin-top:10px;">
+                                    <div class="promo-info-box">
+                                        <i class="bi bi-info-circle"></i> <span class="promo-info-text"></span>
+                                    </div>
+                                </div>
                                 <div class="promo-alert" style="display:none; margin-top:10px;">
-                                    <div class="alert alert-success mb-0">
+                                    <div class="promo-alert-box">
                                         <i class="bi bi-gift"></i> <span class="promo-text"></span>
                                     </div>
                                 </div>
@@ -89,6 +94,38 @@
 @endsection
 
 @section('scripts')
+<style>
+.promo-alert-box {
+    background: linear-gradient(135deg, #d1f4e0 0%, #a8e6cf 100%);
+    border: 1px solid #10b981;
+    color: #065f46;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 0;
+}
+
+html[data-theme="dark"] .promo-alert-box {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+    border: 1px solid #10b981;
+    color: #d1fae5;
+}
+
+.promo-info-box {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border: 1px solid #3b82f6;
+    color: #1e40af;
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 0;
+    font-size: 13px;
+}
+
+html[data-theme="dark"] .promo-info-box {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    border: 1px solid #3b82f6;
+    color: #dbeafe;
+}
+</style>
 <script>
 let productIndex = 1;
 
@@ -118,19 +155,24 @@ document.getElementById('add-product').addEventListener('click', function() {
                 <label class="form-label">الكمية</label>
                 <input type="number" name="items[${productIndex}][quantity]" class="form-control quantity-input" min="1" required>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-2 free-quantity-col" style="display:none;">
                 <label class="form-label">هدية</label>
                 <input type="number" name="items[${productIndex}][free_quantity]" class="form-control free-quantity-input" value="0" readonly>
                 <input type="hidden" name="items[${productIndex}][promotion_id]" class="promotion-id-input">
             </div>
-            <div class="col-md-2 d-flex align-items-end">
+            <div class="col-md-2 d-flex align-items-end remove-btn-col">
                 <button type="button" class="btn btn-danger remove-product">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
         </div>
+        <div class="promo-info" style="display:none; margin-top:10px;">
+            <div class="promo-info-box">
+                <i class="bi bi-info-circle"></i> <span class="promo-info-text"></span>
+            </div>
+        </div>
         <div class="promo-alert" style="display:none; margin-top:10px;">
-            <div class="alert alert-success mb-0">
+            <div class="promo-alert-box">
                 <i class="bi bi-gift"></i> <span class="promo-text"></span>
             </div>
         </div>
@@ -155,6 +197,36 @@ function updateRemoveButtons() {
         removeBtn.disabled = rows.length === 1;
     });
 }
+
+// التحقق من العروض عند اختيار المنتج
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('product-select')) {
+        const row = e.target.closest('.product-row');
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        const freeCol = row.querySelector('.free-quantity-col');
+        const promoInfo = row.querySelector('.promo-info');
+        const promoInfoText = row.querySelector('.promo-info-text');
+        const removeBtnCol = row.querySelector('.remove-btn-col');
+        
+        if (selectedOption && selectedOption.value) {
+            const promoMin = parseInt(selectedOption.dataset.promoMin) || 0;
+            const promoFree = parseInt(selectedOption.dataset.promoFree) || 0;
+            
+            if (promoMin > 0) {
+                freeCol.style.display = 'block';
+                promoInfo.style.display = 'block';
+                promoInfoText.textContent = `إذا اشتريت ${promoMin} قطعة تحصل على ${promoFree} مجاناً`;
+                removeBtnCol.classList.remove('col-md-2');
+                removeBtnCol.classList.add('col-md-1');
+            } else {
+                freeCol.style.display = 'none';
+                promoInfo.style.display = 'none';
+                removeBtnCol.classList.remove('col-md-1');
+                removeBtnCol.classList.add('col-md-2');
+            }
+        }
+    }
+});
 
 // التحقق من العروض
  document.addEventListener('input', function(e) {
