@@ -50,8 +50,10 @@ Route::middleware(['auth', 'role:salesman'])->prefix('marketer')->name('marketer
 Route::middleware(['auth', 'role:warehouse_keeper'])->prefix('warehouse')->name('warehouse.')->group(function () {
     Route::get('/requests', [WarehouseRequestController::class, 'index'])->name('requests.index');
     Route::get('/requests/{id}', [WarehouseRequestController::class, 'show'])->name('requests.show');
+    Route::get('/requests/{id}/print', [WarehouseRequestController::class, 'printInvoice'])->name('requests.print');
     Route::patch('/requests/{id}/approve', [WarehouseRequestController::class, 'approve'])->name('requests.approve');
     Route::patch('/requests/{id}/reject', [WarehouseRequestController::class, 'reject'])->name('requests.reject');
+    Route::patch('/requests/{id}/reject-approved', [WarehouseRequestController::class, 'rejectApproved'])->name('requests.reject-approved');
     Route::delete('/requests/{id}/cancel', [WarehouseRequestController::class, 'cancel'])->name('requests.cancel');
     Route::get('/requests/{id}/upload-document', [WarehouseRequestController::class, 'uploadDocument'])->name('requests.upload-document');
     Route::post('/requests/{id}/store-document', [WarehouseRequestController::class, 'storeDocument'])->name('requests.store-document');

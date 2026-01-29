@@ -11,7 +11,8 @@ class MarketerRequest extends Model
     
     protected $fillable = [
         'invoice_number',
-        'marketer_id'
+        'marketer_id',
+        'status'
     ];
 
     protected $casts = [
@@ -29,28 +30,19 @@ class MarketerRequest extends Model
         return $this->hasMany(MarketerRequestItem::class, 'request_id');
     }
 
-    public function status()
+    public function statusDetail()
     {
         return $this->hasOne(MarketerRequestStatus::class, 'request_id');
     }
 
     public function getStatusTextAttribute()
     {
-        if (!$this->status) return 'قيد المراجعة';
-        
-        // التحقق من وجود توثيق
-        $isDocumented = DB::table('delivery_confirmation')
-            ->where('request_id', $this->id)
-            ->exists();
-            
-        if ($isDocumented) {
-            return 'موثق';
-        }
-        
-        return match($this->status->status) {
-            'pending' => 'قيد المراجعة',
+        return match($this->status) {
+            'pending' => 'في انتظار الموافقة',
             'approved' => 'انتظار التوثيق',
             'rejected' => 'مرفوض',
+            'cancelled' => 'ملغى',
+            'documented' => 'موثق',
             default => 'غير محدد'
         };
     }

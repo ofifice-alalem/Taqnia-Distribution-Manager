@@ -9,17 +9,13 @@
             <div class="card-header">
                 <h4><i class="bi bi-file-earmark-text"></i> تفاصيل الطلب #{{ $request->id }} - 
                     <span class="badge fs-6
-                        @if(!$request->status || $request->status->status == 'pending') bg-warning
-                        @elseif($request->status->status == 'rejected') bg-danger
-                        @elseif($request->status->status == 'cancelled') bg-warning
-                        @else bg-danger
+                        @if($request->status == 'pending') bg-warning
+                        @elseif($request->status == 'rejected') bg-danger
+                        @elseif($request->status == 'cancelled') bg-secondary
+                        @elseif($request->status == 'approved') bg-info
+                        @else bg-success
                         @endif">
-                        @if(!$request->status || $request->status->status == 'pending') قيد المراجعة
-                        @elseif($request->status->status == 'approved') موافق عليه
-                        @elseif($request->status->status == 'rejected') مرفوض
-                        @elseif($request->status->status == 'cancelled') ملغى
-                        @else مرفوض
-                        @endif
+                        {{ $request->status_text }}
                     </span>
                 </h4>
             </div>
@@ -90,7 +86,13 @@
                     <i class="bi bi-arrow-right"></i> رجوع للقائمة
                 </a>
                 
-                @if(!$request->status || $request->status->status == 'pending')
+                @if($request->status != 'pending')
+                    <a href="{{ route('warehouse.requests.print', $request->id) }}" class="btn btn-primary w-100 mb-2" target="_blank">
+                        <i class="bi bi-printer"></i> طباعة الفاتورة
+                    </a>
+                @endif
+                
+                @if($request->status == 'pending')
                     <button type="button" class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#approveModal">
                         <i class="bi bi-check"></i> موافقة
                     </button>
@@ -100,52 +102,52 @@
                     </button>
                 @endif
                 
-                @if($request->status && $request->status->status == 'approved' && !$documentInfo)
+                @if($request->status == 'approved' && !$documentInfo)
                     <a href="{{ route('warehouse.requests.upload-document', $request->id) }}" class="btn btn-primary w-100 mb-2">
                         <i class="bi bi-camera"></i> توثيق الفاتورة
                     </a>
                     
-                    <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#cancelModal">
-                        <i class="bi bi-ban"></i> إلغاء الطلب
+                    <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectApprovedModal">
+                        <i class="bi bi-x"></i> رفض الطلب
                     </button>
                 @endif
             </div>
         </div>
         
-        @if($request->status && $request->status->status == 'rejected')
+        @if($request->status == 'rejected' && $request->statusDetail)
             <div class="card mt-3">
                 <div class="card-header bg-danger text-white">
                     <h6><i class="bi bi-x-circle"></i> معلومات الرفض</h6>
                 </div>
                 <div class="card-body">
                     <p class="mb-1"><strong>تم الرفض في:</strong></p>
-                    <p>{{ $request->status->updated_at }}</p>
+                    <p>{{ $request->statusDetail->updated_at }}</p>
                     <p class="mb-1"><strong>أمين المخزن:</strong></p>
-                    <p>{{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
-                    @if($request->status->reason)
+                    <p>{{ $request->statusDetail->keeper->full_name ?? 'غير محدد' }}</p>
+                    @if($request->statusDetail->reason)
                         <p class="mb-1"><strong>سبب الرفض:</strong></p>
                         <div class="alert alert-danger">
-                            {{ $request->status->reason }}
+                            {{ $request->statusDetail->reason }}
                         </div>
                     @endif
                 </div>
             </div>
         @endif
         
-        @if($request->status && $request->status->status == 'cancelled')
+        @if($request->status == 'cancelled' && $request->statusDetail)
             <div class="card mt-3">
                 <div class="card-header bg-warning text-white">
                     <h6><i class="bi bi-ban"></i> معلومات الإلغاء</h6>
                 </div>
                 <div class="card-body">
                     <p class="mb-1"><strong>تم الإلغاء في:</strong></p>
-                    <p>{{ $request->status->updated_at }}</p>
+                    <p>{{ $request->statusDetail->updated_at }}</p>
                     <p class="mb-1"><strong>أمين المخزن:</strong></p>
-                    <p>{{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
-                    @if($request->status->reason)
+                    <p>{{ $request->statusDetail->keeper->full_name ?? 'غير محدد' }}</p>
+                    @if($request->statusDetail->reason)
                         <p class="mb-1"><strong>سبب الإلغاء:</strong></p>
                         <div class="alert alert-warning">
-                            {{ $request->status->reason }}
+                            {{ $request->statusDetail->reason }}
                         </div>
                     @endif
                     <div class="alert alert-info">
@@ -212,7 +214,7 @@
 </div>
 
 <!-- Modal للموافقة -->
-@if(!$request->status || $request->status->status == 'pending')
+@if($request->status == 'pending')
 <div class="modal fade" id="approveModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -261,38 +263,38 @@
         </div>
     </div>
 </div>
+@endif
 
-<!-- Modal لإلغاء الطلب -->
-@if($request->status && $request->status->status == 'approved' && !$documentInfo)
-<div class="modal fade" id="cancelModal" tabindex="-1">
+<!-- Modal للرفض بعد الموافقة -->
+@if($request->status == 'approved' && !$documentInfo)
+<div class="modal fade" id="rejectApprovedModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">إلغاء الطلب</h5>
+                <h5 class="modal-title">رفض الطلب</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('warehouse.requests.cancel', $request->id) }}" method="POST">
+            <form action="{{ route('warehouse.requests.reject-approved', $request->id) }}" method="POST">
                 @csrf
-                @method('DELETE')
+                @method('PATCH')
                 <div class="modal-body">
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle"></i> 
-                        <strong>تحذير:</strong> سيتم إلغاء الطلب وإرجاع الكمية من مخزن المسوق المحجوز إلى المخزن الرئيسي.
+                        <strong>تحذير:</strong> سيتم رفض الطلب وإرجاع الكمية من مخزن المسوق المحجوز إلى المخزن الرئيسي.
                     </div>
                     <div class="mb-3">
-                        <label for="cancellation_reason" class="form-label">سبب الإلغاء</label>
-                        <textarea name="cancellation_reason" id="cancellation_reason" class="form-control" rows="3" required placeholder="اكتب سبب إلغاء الطلب..."></textarea>
+                        <label for="rejection_reason_approved" class="form-label">سبب الرفض</label>
+                        <textarea name="rejection_reason" id="rejection_reason_approved" class="form-control" rows="3" required placeholder="اكتب سبب رفض الطلب..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-warning">تأكيد الإلغاء</button>
+                    <button type="submit" class="btn btn-danger">تأكيد الرفض</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-@endif
 @endif
 
 <script>
@@ -303,7 +305,7 @@ function loadWarehouseRequestImage() {
         const requestImage = document.getElementById('warehouseRequestImage');
         const imageLoader = document.getElementById('warehouseImageLoader');
         const openImageLink = document.getElementById('warehouseOpenImageLink');
-        const imagePath = "{{ asset('storage/' . $documentInfo->signed_image) }}";
+        const imagePath = "{{ $documentInfo ? asset('storage/' . $documentInfo->signed_image) : '' }}";
         
         requestImage.onload = function() {
             imageLoader.style.display = 'none';

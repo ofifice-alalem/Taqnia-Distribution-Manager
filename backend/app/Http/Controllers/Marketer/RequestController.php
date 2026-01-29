@@ -17,48 +17,27 @@ class RequestController extends Controller
     {
         $marketerId = Auth::id();
         
-        $documentedRequests = MarketerRequest::with(['items.product', 'status.keeper'])
+        $documentedRequests = MarketerRequest::with(['items.product', 'statusDetail.keeper'])
             ->where('marketer_id', $marketerId)
-            ->whereHas('status', function($q) {
-                $q->where('status', 'approved');
-            })
-            ->whereExists(function($q) {
-                $q->select(DB::raw(1))
-                  ->from('delivery_confirmation')
-                  ->whereRaw('delivery_confirmation.request_id = marketer_requests.id');
-            })
+            ->where('status', 'documented')
             ->orderBy('created_at', 'desc')
             ->get();
             
-        $waitingDocRequests = MarketerRequest::with(['items.product', 'status.keeper'])
+        $waitingDocRequests = MarketerRequest::with(['items.product', 'statusDetail.keeper'])
             ->where('marketer_id', $marketerId)
-            ->whereHas('status', function($q) {
-                $q->where('status', 'approved');
-            })
-            ->whereNotExists(function($q) {
-                $q->select(DB::raw(1))
-                  ->from('delivery_confirmation')
-                  ->whereRaw('delivery_confirmation.request_id = marketer_requests.id');
-            })
+            ->where('status', 'approved')
             ->orderBy('created_at', 'desc')
             ->get();
             
-        $pendingRequests = MarketerRequest::with(['items.product', 'status.keeper'])
+        $pendingRequests = MarketerRequest::with(['items.product', 'statusDetail.keeper'])
             ->where('marketer_id', $marketerId)
-            ->where(function($q) {
-                $q->whereDoesntHave('status')
-                  ->orWhereHas('status', function($subQ) {
-                      $subQ->where('status', 'pending');
-                  });
-            })
+            ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
             
-        $rejectedRequests = MarketerRequest::with(['items.product', 'status.keeper'])
+        $rejectedRequests = MarketerRequest::with(['items.product', 'statusDetail.keeper'])
             ->where('marketer_id', $marketerId)
-            ->whereHas('status', function($q) {
-                $q->whereIn('status', ['rejected', 'cancelled']);
-            })
+            ->whereIn('status', ['rejected', 'cancelled'])
             ->orderBy('created_at', 'desc')
             ->get();
             
@@ -93,7 +72,8 @@ class RequestController extends Controller
         DB::transaction(function() use ($request) {
             $marketerRequest = MarketerRequest::create([
                 'invoice_number' => 'REQ-' . time() . '-' . Auth::id(),
-                'marketer_id' => Auth::id()
+                'marketer_id' => Auth::id(),
+                'status' => 'pending'
             ]);
 
             foreach ($request->products as $product) {
@@ -110,7 +90,7 @@ class RequestController extends Controller
 
     public function show($id)
     {
-        $request = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+        $request = MarketerRequest::with(['marketer', 'items.product', 'statusDetail.keeper'])
             ->where('marketer_id', Auth::id())
             ->findOrFail($id);
             
@@ -123,22 +103,41 @@ class RequestController extends Controller
 
     public function cancel($id)
     {
-        $request = MarketerRequest::where('marketer_id', Auth::id())
+        $request = MarketerRequest::with('items')->where('marketer_id', Auth::id())
             ->where('id', $id)
             ->firstOrFail();
 
-        if ($request->status && $request->status->status !== 'pending') {
+        if (!in_array($request->status, ['pending', 'approved'])) {
             return redirect()->back()->with('error', 'لا يمكن إلغاء طلب تم اتخاذ قرار بشأنه');
         }
 
-        $request->delete();
+        $wasApproved = $request->status == 'approved';
+
+        DB::transaction(function() use ($request, $wasApproved) {
+            $request->update(['status' => 'cancelled']);
+            
+            if ($wasApproved) {
+                $request->statusDetail()->delete();
+                
+                foreach ($request->items as $item) {
+                    DB::table('marketer_reserved_stock')
+                        ->where('marketer_id', $request->marketer_id)
+                        ->where('product_id', $item->product_id)
+                        ->decrement('reserved_quantity', $item->quantity);
+
+                    DB::table('main_stock')
+                        ->where('product_id', $item->product_id)
+                        ->increment('quantity', $item->quantity);
+                }
+            }
+        });
         
         return redirect()->route('marketer.requests.index')->with('success', 'تم إلغاء الطلب بنجاح');
     }
 
     public function printInvoice($id)
     {
-        $request = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+        $request = MarketerRequest::with(['marketer', 'items.product', 'statusDetail.keeper'])
             ->where('marketer_id', Auth::id())
             ->findOrFail($id);
 
@@ -152,9 +151,9 @@ class RequestController extends Controller
             'invoiceNumber' => $request->invoice_number,
             'date' => \Carbon\Carbon::parse($request->created_at)->format('Y-m-d H:i'),
             'marketerName' => $arabic->utf8Glyphs($request->marketer->full_name ?? 'غير محدد'),
-            'status' => $arabic->utf8Glyphs($request->status->status ?? 'قيد المراجعة'),
-            'keeperName' => $request->status && $request->status->keeper ? $arabic->utf8Glyphs($request->status->keeper->full_name) : '',
-            'statusDate' => $request->status ? \Carbon\Carbon::parse($request->status->updated_at)->format('Y-m-d H:i') : '',
+            'status' => $arabic->utf8Glyphs($request->status_text),
+            'keeperName' => $request->statusDetail && $request->statusDetail->keeper ? $arabic->utf8Glyphs($request->statusDetail->keeper->full_name) : '',
+            'statusDate' => $request->statusDetail ? \Carbon\Carbon::parse($request->statusDetail->updated_at)->format('Y-m-d H:i') : '',
             'items' => $request->items->map(function($item) use ($arabic) {
                 return (object)[
                     'name' => $arabic->utf8Glyphs($item->product->name),

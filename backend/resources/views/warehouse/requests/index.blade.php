@@ -59,7 +59,7 @@
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected" type="button" role="tab">
-            <i class="bi bi-x-circle"></i> مرفوضة ({{ $rejectedCount }})
+            <i class="bi bi-x-circle"></i> مرفوض / ملغى ({{ $rejectedCount }})
         </button>
     </li>
 </ul>

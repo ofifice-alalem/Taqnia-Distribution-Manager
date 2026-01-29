@@ -9,7 +9,7 @@
                     <th>التاريخ</th>
                     <th>عدد المنتجات</th>
                     <th>عدد الأصناف</th>
-                    <th>الحالة</th>
+                    <th>مرفوض / ملغى</th>
                     <th>الإجراءات</th>
                 </tr>
             </thead>
@@ -27,12 +27,14 @@
                                 @if($type == 'pending') badge-warning
                                 @elseif($type == 'waiting-doc') badge-info
                                 @elseif($type == 'documented') badge-success
-                                @else badge-danger
+                                @elseif($request->status == 'rejected') badge-danger
+                                @else badge-secondary
                                 @endif">
                                 @if($type == 'pending') في انتظار الموافقة
                                 @elseif($type == 'waiting-doc') في انتظار التوثيق
                                 @elseif($type == 'documented') موثق
-                                @else مرفوض
+                                @elseif($request->status == 'rejected') مرفوض
+                                @else ملغى
                                 @endif
                             </span>
                         </td>
@@ -259,7 +261,12 @@
 
 .badge-danger {
     background: #f8d7da;
-    color: #fff;
+    color: #721c24;
+}
+
+.badge-secondary {
+    background: #e2e3e5;
+    color: #383d41;
 }
 
 /* Empty State */

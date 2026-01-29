@@ -15,11 +15,13 @@
                     <i class="bi bi-arrow-right"></i> رجوع للقائمة
                 </a>
                 
-                <a href="{{ route('marketer.requests.print', $request->id) }}" class="btn btn-primary w-100 mb-2" target="_blank">
-                    <i class="bi bi-printer"></i> طباعة الفاتورة
-                </a>
+                @if($request->status != 'pending')
+                    <a href="{{ route('marketer.requests.print', $request->id) }}" class="btn btn-primary w-100 mb-2" target="_blank">
+                        <i class="bi bi-printer"></i> طباعة الفاتورة
+                    </a>
+                @endif
                 
-                @if(!$request->status || (is_object($request->status) && $request->status->status == 'pending'))
+                @if($request->status == 'pending' || $request->status == 'approved')
                     <button type="button" class="btn btn-danger w-100" onclick="cancelRequest({{ $request->id }})">
                         <i class="bi bi-x-circle"></i> إلغاء الطلب
                     </button>
@@ -27,14 +29,14 @@
             </div>
         </div>
         
-        @if($request->status && is_object($request->status) && $request->status->status == 'approved')
+        @if($request->status == 'approved' && $request->statusDetail)
             <div class="card mt-3">
                 <div class="card-header bg-success text-white">
                     <h6><i class="bi bi-check-circle"></i> معلومات الموافقة</h6>
                 </div>
                 <div class="card-body info-card-body">
-                    <p><strong>تم الموافقة في:</strong> {{ $request->status->updated_at }}</p>
-                    <p><strong>أمين المخزن:</strong> {{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
+                    <p><strong>تم الموافقة في:</strong> {{ $request->statusDetail->updated_at }}</p>
+                    <p><strong>أمين المخزن:</strong> {{ $request->statusDetail->keeper->full_name ?? 'غير محدد' }}</p>
                     <div class="alert alert-success">
                         <small><i class="bi bi-check-circle"></i> تم نقل البضاعة إلى مخزون الحجز</small>
                     </div>
@@ -42,31 +44,31 @@
             </div>
         @endif
         
-        @if($request->status && is_object($request->status) && $request->status->status == 'rejected')
+        @if($request->status == 'rejected' && $request->statusDetail)
             <div class="card mt-3">
                 <div class="card-header bg-danger text-white">
                     <h6><i class="bi bi-x-circle"></i> معلومات الرفض</h6>
                 </div>
                 <div class="card-body info-card-body">
-                    <p><strong>تم الرفض في:</strong> {{ $request->status->updated_at }}</p>
-                    <p><strong>أمين المخزن:</strong> {{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
-                    @if($request->status->reason)
-                        <p><strong>السبب:</strong> {{ $request->status->reason }}</p>
+                    <p><strong>تم الرفض في:</strong> {{ $request->statusDetail->updated_at }}</p>
+                    <p><strong>أمين المخزن:</strong> {{ $request->statusDetail->keeper->full_name ?? 'غير محدد' }}</p>
+                    @if($request->statusDetail->reason)
+                        <p><strong>السبب:</strong> {{ $request->statusDetail->reason }}</p>
                     @endif
                 </div>
             </div>
         @endif
         
-        @if($request->status && is_object($request->status) && $request->status->status == 'cancelled')
+        @if($request->status == 'cancelled' && $request->statusDetail)
             <div class="card mt-3">
                 <div class="card-header bg-warning text-white">
                     <h6><i class="bi bi-ban"></i> معلومات الإلغاء</h6>
                 </div>
                 <div class="card-body info-card-body">
-                    <p><strong>تم الإلغاء في:</strong> {{ $request->status->updated_at }}</p>
-                    <p><strong>أمين المخزن:</strong> {{ $request->status->keeper->full_name ?? 'غير محدد' }}</p>
-                    @if($request->status->reason)
-                        <p><strong>السبب:</strong> {{ $request->status->reason }}</p>
+                    <p><strong>تم الإلغاء في:</strong> {{ $request->statusDetail->updated_at }}</p>
+                    <p><strong>أمين المخزن:</strong> {{ $request->statusDetail->keeper->full_name ?? 'غير محدد' }}</p>
+                    @if($request->statusDetail->reason)
+                        <p><strong>السبب:</strong> {{ $request->statusDetail->reason }}</p>
                     @endif
                     <div class="alert alert-info">
                         <small><i class="bi bi-arrow-return-left"></i> تم إرجاع البضاعة للمخزن الرئيسي</small>
@@ -136,18 +138,13 @@
             <div class="card-header">
                 <h4><i class="bi bi-file-earmark-text"></i> تفاصيل الطلب #{{ $request->id }} - 
                     <span class="badge fs-6
-                        @if(!$request->status || (is_object($request->status) && $request->status->status == 'pending')) bg-warning
-                        @elseif(is_object($request->status) && $request->status->status == 'approved') bg-success
-                        @elseif(is_object($request->status) && $request->status->status == 'rejected') bg-danger
-                        @elseif(is_object($request->status) && $request->status->status == 'cancelled') bg-warning
-                        @else bg-danger
+                        @if($request->status == 'pending') bg-warning
+                        @elseif($request->status == 'approved') bg-success
+                        @elseif($request->status == 'rejected') bg-danger
+                        @elseif($request->status == 'cancelled') bg-secondary
+                        @elseif($request->status == 'documented') bg-info
                         @endif">
-                        @if(!$request->status || (is_object($request->status) && $request->status->status == 'pending')) قيد المراجعة
-                        @elseif(is_object($request->status) && $request->status->status == 'approved') موافق عليه
-                        @elseif(is_object($request->status) && $request->status->status == 'rejected') مرفوض
-                        @elseif(is_object($request->status) && $request->status->status == 'cancelled') ملغى
-                        @else مرفوض
-                        @endif
+                        {{ $request->status_text }}
                     </span>
                 </h4>
             </div>
@@ -347,11 +344,12 @@ function cancelRequest(id) {
 let imageLoaded = false;
 
 function loadRequestImage() {
+    @if($documentInfo)
     if (!imageLoaded) {
         const requestImage = document.getElementById('requestImage');
         const imageLoader = document.getElementById('imageLoader');
         const openImageLink = document.getElementById('openImageLink');
-        const imagePath = "{{ asset('storage/' . $documentInfo->signed_image) }}";
+        const imagePath = "{{ $documentInfo ? asset('storage/' . $documentInfo->signed_image) : '' }}";
         
         requestImage.onload = function() {
             imageLoader.style.display = 'none';
@@ -363,6 +361,7 @@ function loadRequestImage() {
         requestImage.src = imagePath;
         openImageLink.href = imagePath;
     }
+    @endif
     
     const modal = new bootstrap.Modal(document.getElementById('imageModal'));
     modal.show();

@@ -14,48 +14,23 @@ class RequestController extends Controller
 {
     public function index()
     {
-        // موثق - له delivery_confirmation
-        $documentedRequests = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
-            ->whereHas('status', function($q) {
-                $q->where('status', 'approved');
-            })
-            ->whereExists(function($q) {
-                $q->select(DB::raw(1))
-                  ->from('delivery_confirmation')
-                  ->whereRaw('delivery_confirmation.request_id = marketer_requests.id');
-            })
+        $documentedRequests = MarketerRequest::with(['marketer', 'items.product', 'statusDetail.keeper'])
+            ->where('status', 'documented')
             ->orderBy('created_at', 'desc')
             ->get();
             
-        // في انتظار التوثيق - موافق عليه ولكن لا يوجد delivery_confirmation
-        $waitingDocRequests = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
-            ->whereHas('status', function($q) {
-                $q->where('status', 'approved');
-            })
-            ->whereNotExists(function($q) {
-                $q->select(DB::raw(1))
-                  ->from('delivery_confirmation')
-                  ->whereRaw('delivery_confirmation.request_id = marketer_requests.id');
-            })
+        $waitingDocRequests = MarketerRequest::with(['marketer', 'items.product', 'statusDetail.keeper'])
+            ->where('status', 'approved')
             ->orderBy('created_at', 'desc')
             ->get();
             
-        // في انتظار الموافقة - pending أو لا يوجد status
-        $pendingRequests = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
-            ->where(function($q) {
-                $q->whereDoesntHave('status')
-                  ->orWhereHas('status', function($subQ) {
-                      $subQ->where('status', 'pending');
-                  });
-            })
+        $pendingRequests = MarketerRequest::with(['marketer', 'items.product', 'statusDetail.keeper'])
+            ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
             
-        // مرفوضة - rejected أو cancelled
-        $rejectedRequests = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
-            ->whereHas('status', function($q) {
-                $q->whereIn('status', ['rejected', 'cancelled']);
-            })
+        $rejectedRequests = MarketerRequest::with(['marketer', 'items.product', 'statusDetail.keeper'])
+            ->whereIn('status', ['rejected', 'cancelled'])
             ->orderBy('created_at', 'desc')
             ->get();
             
@@ -78,7 +53,7 @@ class RequestController extends Controller
 
     public function show($id)
     {
-        $request = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+        $request = MarketerRequest::with(['marketer', 'items.product', 'statusDetail.keeper'])
             ->findOrFail($id);
             
         $documentInfo = DB::table('delivery_confirmation')
@@ -100,6 +75,8 @@ class RequestController extends Controller
         }
 
         DB::transaction(function() use ($marketerRequest) {
+            $marketerRequest->update(['status' => 'approved']);
+            
             MarketerRequestStatus::create([
                 'request_id' => $marketerRequest->id,
                 'marketer_id' => $marketerRequest->marketer_id,
@@ -131,6 +108,8 @@ class RequestController extends Controller
     {
         $marketerRequest = MarketerRequest::findOrFail($id);
 
+        $marketerRequest->update(['status' => 'rejected']);
+        
         MarketerRequestStatus::create([
             'request_id' => $marketerRequest->id,
             'marketer_id' => $marketerRequest->marketer_id,
@@ -144,10 +123,10 @@ class RequestController extends Controller
 
     public function uploadDocument($id)
     {
-        $request = MarketerRequest::with(['marketer', 'items.product', 'status'])
+        $request = MarketerRequest::with(['marketer', 'items.product', 'statusDetail'])
             ->findOrFail($id);
             
-        if (!$request->status || $request->status->status !== 'approved') {
+        if ($request->status !== 'approved') {
             return redirect()->back()->with('error', 'يجب الموافقة على الطلب أولاً');
         }
 
@@ -170,6 +149,8 @@ class RequestController extends Controller
         );
 
         DB::transaction(function() use ($marketerRequest, $imagePath) {
+            $marketerRequest->update(['status' => 'documented']);
+            
             foreach ($marketerRequest->items as $item) {
                 DB::table('marketer_reserved_stock')
                     ->where('marketer_id', $marketerRequest->marketer_id)
@@ -191,6 +172,7 @@ class RequestController extends Controller
                 'request_id' => $marketerRequest->id,
                 'keeper_id' => Auth::id(),
                 'signed_image' => $imagePath,
+                'status' => 'documented',
                 'confirmed_at' => now()
             ]);
         });
@@ -206,51 +188,116 @@ class RequestController extends Controller
 
         $marketerRequest = MarketerRequest::with('items')->findOrFail($id);
         
-        if (!$marketerRequest->status || $marketerRequest->status->status !== 'approved') {
+        if ($marketerRequest->status !== 'approved') {
             return redirect()->back()->with('error', 'لا يمكن إلغاء هذا الطلب');
-        }
-        
-        $documentExists = DB::table('delivery_confirmation')
-            ->where('request_id', $id)
-            ->exists();
-            
-        if ($documentExists) {
-            return redirect()->back()->with('error', 'لا يمكن إلغاء طلب موثق');
         }
 
         DB::transaction(function() use ($marketerRequest, $request) {
-            // 1️⃣ تحديث حالة الطلب إلى cancelled
-            $marketerRequest->status()->update([
+            $marketerRequest->update(['status' => 'cancelled']);
+            
+            $marketerRequest->statusDetail()->update([
                 'status' => 'cancelled',
                 'reason' => $request->cancellation_reason
             ]);
 
-            // 2️⃣ إرجاع الكمية من الحجز إلى المخزن الرئيسي
             foreach ($marketerRequest->items as $item) {
-                // خصم من الحجز
                 DB::table('marketer_reserved_stock')
                     ->where('marketer_id', $marketerRequest->marketer_id)
                     ->where('product_id', $item->product_id)
                     ->decrement('reserved_quantity', $item->quantity);
 
-                // إضافة للمخزن الرئيسي
                 DB::table('main_stock')
                     ->where('product_id', $item->product_id)
                     ->increment('quantity', $item->quantity);
-
-                // 4️⃣ توثيق الحركة في warehouse_stock_logs
-                DB::table('warehouse_stock_logs')->insert([
-                    'action' => 'return_from_reservation',
-                    'invoice_type' => 'marketer_request',
-                    'invoice_id' => $marketerRequest->id,
-                    'product_id' => $item->product_id,
-                    'quantity' => $item->quantity,
-                    'keeper_id' => Auth::id(),
-                    'created_at' => now()
-                ]);
             }
         });
 
         return redirect()->route('warehouse.requests.index')->with('success', 'تم إلغاء الطلب وإرجاع الكمية للمخزن الرئيسي');
+    }
+
+    public function printInvoice($id)
+    {
+        $request = MarketerRequest::with(['marketer', 'items.product', 'statusDetail.keeper'])
+            ->findOrFail($id);
+
+        $documentInfo = DB::table('delivery_confirmation')
+            ->where('request_id', $id)
+            ->first();
+
+        $arabic = new \ArPHP\I18N\Arabic();
+
+        $data = [
+            'invoiceNumber' => $request->invoice_number,
+            'date' => \Carbon\Carbon::parse($request->created_at)->format('Y-m-d H:i'),
+            'marketerName' => $arabic->utf8Glyphs($request->marketer->full_name ?? 'غير محدد'),
+            'status' => $arabic->utf8Glyphs($request->status_text),
+            'keeperName' => $request->statusDetail && $request->statusDetail->keeper ? $arabic->utf8Glyphs($request->statusDetail->keeper->full_name) : '',
+            'statusDate' => $request->statusDetail ? \Carbon\Carbon::parse($request->statusDetail->updated_at)->format('Y-m-d H:i') : '',
+            'items' => $request->items->map(function($item) use ($arabic) {
+                return (object)[
+                    'name' => $arabic->utf8Glyphs($item->product->name),
+                    'quantity' => $item->quantity,
+                    'price' => $item->product->current_price,
+                    'total' => $item->quantity * $item->product->current_price
+                ];
+            }),
+            'total' => $request->items->sum(fn($item) => $item->quantity * $item->product->current_price),
+            'title' => $arabic->utf8Glyphs('فاتورة طلب بضاعة'),
+            'labels' => [
+                'invoiceNumber' => $arabic->utf8Glyphs('رقم الفاتورة'),
+                'date' => $arabic->utf8Glyphs('تاريخ الطلب'),
+                'marketer' => $arabic->utf8Glyphs('اسم المسوق'),
+                'status' => $arabic->utf8Glyphs('حالة الطلب'),
+                'keeper' => $arabic->utf8Glyphs('أمين المخزن'),
+                'statusDate' => $arabic->utf8Glyphs('تاريخ المعالجة'),
+                'product' => $arabic->utf8Glyphs('اسم المنتج'),
+                'quantity' => $arabic->utf8Glyphs('الكمية'),
+                'price' => $arabic->utf8Glyphs('السعر'),
+                'total' => $arabic->utf8Glyphs('الإجمالي'),
+                'grandTotal' => $arabic->utf8Glyphs('الإجمالي الكلي'),
+                'currency' => $arabic->utf8Glyphs('دينار'),
+                'marketerSign' => $arabic->utf8Glyphs('توقيع المسوق'),
+                'keeperSign' => $arabic->utf8Glyphs('توقيع أمين المخزن'),
+            ]
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('marketer.requests.invoice-pdf', $data)->setPaper('a4');
+
+        return $pdf->download('invoice-' . $request->invoice_number . '.pdf');
+    }
+
+    public function rejectApproved(Request $request, $id)
+    {
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500'
+        ]);
+
+        $marketerRequest = MarketerRequest::with('items')->findOrFail($id);
+        
+        if ($marketerRequest->status !== 'approved') {
+            return redirect()->back()->with('error', 'لا يمكن رفض هذا الطلب');
+        }
+
+        DB::transaction(function() use ($marketerRequest, $request) {
+            $marketerRequest->update(['status' => 'rejected']);
+            
+            $marketerRequest->statusDetail()->update([
+                'status' => 'rejected',
+                'keeper_id' => Auth::id()
+            ]);
+
+            foreach ($marketerRequest->items as $item) {
+                DB::table('marketer_reserved_stock')
+                    ->where('marketer_id', $marketerRequest->marketer_id)
+                    ->where('product_id', $item->product_id)
+                    ->decrement('reserved_quantity', $item->quantity);
+
+                DB::table('main_stock')
+                    ->where('product_id', $item->product_id)
+                    ->increment('quantity', $item->quantity);
+            }
+        });
+
+        return redirect()->route('warehouse.requests.index')->with('success', 'تم رفض الطلب وإرجاع الكمية للمخزن الرئيسي');
     }
 }
