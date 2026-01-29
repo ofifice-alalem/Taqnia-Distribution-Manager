@@ -5,8 +5,10 @@ use App\Http\Controllers\ProductRequestController;
 use App\Http\Controllers\Marketer\RequestController as MarketerRequestController;
 use App\Http\Controllers\Marketer\StockController as MarketerStockController;
 use App\Http\Controllers\Marketer\Returns\ReturnController as MarketerReturnController;
+use App\Http\Controllers\Marketer\Sales\SalesInvoiceController;
 use App\Http\Controllers\Warehouse\RequestController as WarehouseRequestController;
 use App\Http\Controllers\Warehouse\Returns\ReturnController as WarehouseReturnController;
+use App\Http\Controllers\Warehouse\Sales\SalesConfirmationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 
@@ -45,6 +47,14 @@ Route::middleware(['auth', 'role:salesman'])->prefix('marketer')->name('marketer
     Route::get('/returns/{id}', [MarketerReturnController::class, 'show'])->name('returns.show');
     Route::get('/returns/{id}/cancel', [MarketerReturnController::class, 'cancel'])->name('returns.cancel');
     Route::get('/returns/{id}/print', [MarketerReturnController::class, 'printInvoice'])->name('returns.print');
+    
+    // Sales Routes
+    Route::get('/sales', [SalesInvoiceController::class, 'index'])->name('sales.index');
+    Route::get('/sales/create', [SalesInvoiceController::class, 'create'])->name('sales.create');
+    Route::post('/sales', [SalesInvoiceController::class, 'store'])->name('sales.store');
+    Route::get('/sales/{id}', [SalesInvoiceController::class, 'show'])->name('sales.show');
+    Route::get('/sales/{id}/print', [SalesInvoiceController::class, 'print'])->name('sales.print');
+    Route::get('/sales/{id}/cancel', [SalesInvoiceController::class, 'cancel'])->name('sales.cancel');
 });
 
 // Warehouse Keeper Routes
@@ -66,6 +76,11 @@ Route::middleware(['auth', 'role:warehouse_keeper'])->prefix('warehouse')->name(
     Route::patch('/returns/{id}/reject', [WarehouseReturnController::class, 'reject'])->name('returns.reject');
     Route::get('/returns/{id}/upload-document', [WarehouseReturnController::class, 'uploadDocument'])->name('returns.upload-document');
     Route::post('/returns/{id}/store-document', [WarehouseReturnController::class, 'storeDocument'])->name('returns.store-document');
+    
+    // Sales Confirmation Routes
+    Route::get('/sales', [SalesConfirmationController::class, 'index'])->name('sales.index');
+    Route::get('/sales/{id}', [SalesConfirmationController::class, 'show'])->name('sales.show');
+    Route::post('/sales/{invoiceId}/confirm', [SalesConfirmationController::class, 'confirm'])->name('sales.confirm');
 });
 
 // Legacy Routes (للتوافق المؤقت)

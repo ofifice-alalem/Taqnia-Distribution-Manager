@@ -14,12 +14,15 @@ return new class extends Migration
             $table->foreignId('marketer_id')->constrained('users');
             $table->foreignId('store_id')->constrained('stores');
             $table->decimal('total_amount', 12, 2)->default(0);
-            $table->decimal('discount_amount', 10, 2)->default(0);
-            $table->decimal('final_amount', 12, 2)->default(0);
-            $table->enum('payment_method', ['cash', 'credit', 'partial'])->default('credit');
-            $table->text('notes')->nullable();
             $table->enum('status', ['pending', 'approved', 'cancelled'])->default('pending');
-            $table->timestamp('created_at')->useCurrent();
+            
+            // حقول التوثيق (دمج sales_confirmation)
+            $table->foreignId('keeper_id')->nullable()->constrained('users');
+            $table->string('stamped_invoice_image')->nullable();
+            $table->timestamp('confirmed_at')->nullable();
+            
+            $table->text('notes')->nullable();
+            $table->timestamps();
         });
     }
 

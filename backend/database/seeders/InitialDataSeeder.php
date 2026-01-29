@@ -66,5 +66,18 @@ class InitialDataSeeder extends Seeder
                 'quantity' => $quantity
             ]);
         }
+
+        // إضافة بضاعة لمخزون المسوق
+        \DB::table('marketer_actual_stock')->insert([
+            ['marketer_id' => 3, 'product_id' => 1, 'quantity' => 50],
+            ['marketer_id' => 3, 'product_id' => 2, 'quantity' => 30],
+            ['marketer_id' => 3, 'product_id' => 3, 'quantity' => 20],
+        ]);
+
+        // إضافة متاجر
+        \DB::table('stores')->insert([
+            ['name' => 'متجر الأمل', 'owner_name' => 'خالد أحمد', 'phone' => '0501111111', 'address' => 'شارع الملك فهد', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'متجر النور', 'owner_name' => 'سعيد محمد', 'phone' => '0502222222', 'address' => 'شارع العروبة', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+        ]);
     }
 }

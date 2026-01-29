@@ -11,8 +11,10 @@ return new class extends Migration
         Schema::create('store_debt_ledger', function (Blueprint $table) {
             $table->id();
             $table->foreignId('store_id')->constrained('stores');
-            $table->enum('entry_type', ['sale', 'return']);
-            $table->integer('reference_id');
+            $table->enum('entry_type', ['sale', 'return', 'payment']);
+            $table->foreignId('sales_invoice_id')->nullable()->constrained('sales_invoices');
+            $table->foreignId('return_id')->nullable()->constrained('sales_returns');
+            $table->foreignId('payment_id')->nullable()->constrained('store_payments');
             $table->decimal('amount', 12, 2);
             $table->timestamp('created_at')->useCurrent();
         });

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('store_pending_stock', function (Blueprint $table) {
             $table->id();
             $table->foreignId('store_id')->constrained('stores');
-            $table->integer('sales_invoice_id');
+            $table->foreignId('sales_invoice_id')->constrained('sales_invoices')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products');
             $table->integer('quantity');
             $table->timestamp('created_at')->useCurrent();
