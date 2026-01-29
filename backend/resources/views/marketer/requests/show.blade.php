@@ -15,11 +15,13 @@
                     <i class="bi bi-arrow-right"></i> رجوع للقائمة
                 </a>
                 
+                @if($request->status && $request->status != 'pending')
                 <a href="{{ route('marketer.requests.print', $request->id) }}" class="btn btn-primary w-100 mb-2" target="_blank">
                     <i class="bi bi-printer"></i> طباعة الفاتورة
                 </a>
+                @endif
                 
-                @if(!$request->status || (is_object($request->status) && $request->status->status == 'pending'))
+                @if(!$request->status || $request->status == 'pending')
                     <button type="button" class="btn btn-danger w-100" onclick="cancelRequest({{ $request->id }})">
                         <i class="bi bi-x-circle"></i> إلغاء الطلب
                     </button>
@@ -136,16 +138,16 @@
             <div class="card-header">
                 <h4><i class="bi bi-file-earmark-text"></i> تفاصيل الطلب #{{ $request->id }} - 
                     <span class="badge fs-6
-                        @if(!$request->status || (is_object($request->status) && $request->status->status == 'pending')) bg-warning
-                        @elseif(is_object($request->status) && $request->status->status == 'approved') bg-success
-                        @elseif(is_object($request->status) && $request->status->status == 'rejected') bg-danger
-                        @elseif(is_object($request->status) && $request->status->status == 'cancelled') bg-warning
+                        @if(!$request->status || $request->status == 'pending') bg-warning
+                        @elseif($request->status == 'approved') bg-success
+                        @elseif($request->status == 'rejected') bg-danger
+                        @elseif($request->status == 'cancelled') bg-warning
                         @else bg-danger
                         @endif">
-                        @if(!$request->status || (is_object($request->status) && $request->status->status == 'pending')) قيد المراجعة
-                        @elseif(is_object($request->status) && $request->status->status == 'approved') موافق عليه
-                        @elseif(is_object($request->status) && $request->status->status == 'rejected') مرفوض
-                        @elseif(is_object($request->status) && $request->status->status == 'cancelled') ملغى
+                        @if(!$request->status || $request->status == 'pending') في انتظار الموافقة
+                        @elseif($request->status == 'approved') موافق عليه
+                        @elseif($request->status == 'rejected') مرفوض
+                        @elseif($request->status == 'cancelled') ملغى
                         @else مرفوض
                         @endif
                     </span>
@@ -351,7 +353,9 @@ function loadRequestImage() {
         const requestImage = document.getElementById('requestImage');
         const imageLoader = document.getElementById('imageLoader');
         const openImageLink = document.getElementById('openImageLink');
-        const imagePath = "{{ asset('storage/' . $documentInfo->signed_image) }}";
+        const imagePath = "{{ $documentInfo ? asset('storage/' . $documentInfo->signed_image) : '' }}";
+        
+        if (!imagePath) return;
         
         requestImage.onload = function() {
             imageLoader.style.display = 'none';
