@@ -1,12 +1,14 @@
 <!-- Desktop Table -->
 <div class="table-wrapper d-none d-md-block">
-    <div class="table-responsive">
-        <table class="table">
+    <div class="modern-table">
+        <table>
             <thead>
                 <tr>
-                    <th>رقم الطلب</th>
+                    <th style="width: 8%;">رقم الطلب</th>
+                    <th style="width: 20%;">رقم الفاتورة</th>
                     <th>التاريخ</th>
                     <th>عدد المنتجات</th>
+                    <th>عدد الأصناف</th>
                     <th>الحالة</th>
                     <th>الإجراءات</th>
                 </tr>
@@ -14,30 +16,17 @@
             <tbody>
                 @forelse($requests as $request)
                     <tr>
+                        <td><strong>#{{ $request->id }}</strong></td>
+                        <td><code>{{ $request->invoice_number }}</code></td>
+                        <td>{{ $request->created_at }}</td>
+                        <td>{{ $request->items->sum('quantity') }}</td>
+                        <td>{{ $request->items->count() }}</td>
                         <td>
-                            <div class="request-id">
-                                <i class="bi bi-file-earmark-text"></i>
-                                #{{ $request->id }}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="date-info">
-                                <i class="bi bi-calendar3"></i>
-                                {{ $request->created_at }}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="items-count">
-                                <i class="bi bi-boxes"></i>
-                                {{ $request->items->count() }} منتج
-                            </div>
-                        </td>
-                        <td>
-                            <span class="status-badge 
-                                @if($type == 'pending') status-pending
-                                @elseif($type == 'waiting-doc') status-approved
-                                @elseif($type == 'documented') status-documented
-                                @else status-rejected
+                            <span class="badge-status 
+                                @if($type == 'pending') badge-warning
+                                @elseif($type == 'waiting-doc') badge-info
+                                @elseif($type == 'documented') badge-success
+                                @else badge-danger
                                 @endif">
                                 @if($type == 'pending') في انتظار الموافقة
                                 @elseif($type == 'waiting-doc') في انتظار التوثيق
@@ -48,13 +37,13 @@
                         </td>
                         <td>
                             <div class="action-buttons">
-                                <a href="{{ route('marketer.requests.show', $request->id) }}" class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
+                                <a href="{{ route('marketer.requests.show', $request->id) }}" class="btn-action btn-view" title="عرض التفاصيل">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 
                                 @if($type == 'pending')
-                                    <button class="btn btn-sm btn-danger" onclick="cancelRequest({{ $request->id }})" title="إلغاء الطلب">
-                                        <i class="bi bi-x-circle"></i>
+                                    <button class="btn-action btn-delete" onclick="cancelRequest({{ $request->id }})" title="إلغاء الطلب">
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 @endif
                             </div>
@@ -62,7 +51,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-5">
+                        <td colspan="7" class="empty-cell">
                             <div class="empty-state">
                                 <i class="bi bi-inbox"></i>
                                 <p>لا توجد طلبات في هذه الفئة</p>
@@ -84,11 +73,11 @@
                     <i class="bi bi-file-earmark-text"></i>
                     الطلب #{{ $request->id }}
                 </div>
-                <span class="status-badge 
-                    @if($type == 'pending') status-pending
-                    @elseif($type == 'waiting-doc') status-approved
-                    @elseif($type == 'documented') status-documented
-                    @else status-rejected
+                <span class="badge-status 
+                    @if($type == 'pending') badge-warning
+                    @elseif($type == 'waiting-doc') badge-info
+                    @elseif($type == 'documented') badge-success
+                    @else badge-danger
                     @endif">
                     @if($type == 'pending') في انتظار الموافقة
                     @elseif($type == 'waiting-doc') في انتظار التوثيق
@@ -127,6 +116,181 @@
 </div>
 
 <style>
+/* Modern Table Design */
+.modern-table {
+    background: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.modern-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.modern-table thead {
+    background: var(--bg-secondary);
+}
+
+.modern-table th {
+    padding: 16px 20px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+}
+
+.modern-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.2s;
+}
+
+.modern-table tbody tr:hover {
+    background-color: var(--bg-hover);
+}
+
+.modern-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.modern-table td {
+    padding: 16px 20px;
+    text-align: right;
+    font-size: 14px;
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+.modern-table td strong {
+    color: var(--text-heading);
+    font-weight: 600;
+}
+
+.modern-table td code {
+    background: #e9ecef;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+    color: #495057;
+    font-weight: 500;
+}
+
+[data-theme="dark"] .modern-table td code {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+}
+
+.btn-action {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.btn-view {
+    background: #e7f3ff;
+    color: #0066cc;
+}
+
+[data-theme="dark"] .btn-view {
+    background: rgba(0, 102, 204, 0.2);
+    color: #66b3ff;
+}
+
+.btn-view:hover {
+    background: #cce5ff;
+}
+
+[data-theme="dark"] .btn-view:hover {
+    background: rgba(0, 102, 204, 0.3);
+}
+
+.btn-delete {
+    background: #ffe7e7;
+    color: #dc3545;
+}
+
+[data-theme="dark"] .btn-delete {
+    background: rgba(220, 53, 69, 0.2);
+    color: #ff6b6b;
+}
+
+.btn-delete:hover {
+    background: #ffcccc;
+}
+
+[data-theme="dark"] .btn-delete:hover {
+    background: rgba(220, 53, 69, 0.3);
+}
+
+/* Status Badges */
+.badge-status {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.badge-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-info {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.badge-success {
+    background: #d1e7dd;
+    color: #fff;
+}
+
+.badge-danger {
+    background: #f8d7da;
+    color: #fff;
+}
+
+/* Empty State */
+.empty-cell {
+    padding: 60px 20px !important;
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Mobile Cards */
 .requests-cards {
     display: flex;
     flex-direction: column;
@@ -136,9 +300,9 @@
 .request-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .card-header {
@@ -156,7 +320,7 @@
     gap: 8px;
     font-weight: 600;
     color: var(--text-heading);
-    font-size: 0.95em;
+    font-size: 14px;
 }
 
 .card-body {
@@ -171,11 +335,11 @@
     align-items: center;
     gap: 8px;
     color: var(--text-main);
-    font-size: 0.9em;
+    font-size: 13px;
 }
 
 .card-info i {
-    color: var(--primary);
+    color: var(--text-muted);
     width: 16px;
 }
 
@@ -188,6 +352,6 @@
 
 .card-footer .btn {
     flex: 1;
-    font-size: 0.85em;
+    font-size: 13px;
 }
 </style>
