@@ -7,20 +7,38 @@
                     <th>رقم الفاتورة</th>
                     <th>المتجر</th>
                     <th>التاريخ</th>
-                    <th>المبلغ</th>
                     <th>عدد الأصناف</th>
+                    <th>السعر</th>
+                    <th>التخفيض</th>
+                    <th>الإجمالي</th>
                     <th>الحالة</th>
                     <th>الإجراءات</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($invoices as $invoice)
+                    @php
+                        $totalPrice = $invoice->items->sum(function($item) {
+                            return ($item->quantity + $item->free_quantity) * $item->unit_price;
+                        });
+                        $discount = $invoice->items->sum(function($item) {
+                            return $item->free_quantity * $item->unit_price;
+                        });
+                    @endphp
                     <tr>
                         <td><code>{{ $invoice->invoice_number }}</code></td>
                         <td><strong>{{ $invoice->store->name }}</strong></td>
                         <td>{{ $invoice->created_at->format('Y-m-d H:i') }}</td>
-                        <td><strong>{{ number_format($invoice->total_amount, 2) }} د.ع</strong></td>
                         <td>{{ $invoice->items->count() }}</td>
+                        <td>{{ number_format($totalPrice, 2) }} د.ع</td>
+                        <td>
+                            @if($discount > 0)
+                                <span class="badge bg-success">{{ number_format($discount, 2) }} د.ع</span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td><strong>{{ number_format($invoice->total_amount, 2) }} د.ع</strong></td>
                         <td>
                             <span class="badge-status 
                                 @if($type == 'pending') badge-warning
@@ -43,7 +61,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="empty-cell">
+                        <td colspan="9" class="empty-cell">
                             <div class="empty-state">
                                 <i class="bi bi-inbox"></i>
                                 <p>لا توجد فواتير في هذه الفئة</p>
@@ -59,6 +77,14 @@
 <!-- Mobile Cards -->
 <div class="requests-cards d-md-none">
     @forelse($invoices as $invoice)
+        @php
+            $totalPrice = $invoice->items->sum(function($item) {
+                return ($item->quantity + $item->free_quantity) * $item->unit_price;
+            });
+            $discount = $invoice->items->sum(function($item) {
+                return $item->free_quantity * $item->unit_price;
+            });
+        @endphp
         <div class="request-card">
             <div class="card-header">
                 <div class="card-title">
@@ -86,12 +112,22 @@
                     <span>{{ $invoice->created_at->format('Y-m-d H:i') }}</span>
                 </div>
                 <div class="card-info">
-                    <i class="bi bi-cash"></i>
-                    <span>{{ number_format($invoice->total_amount, 2) }} د.ع</span>
-                </div>
-                <div class="card-info">
                     <i class="bi bi-boxes"></i>
                     <span>{{ $invoice->items->count() }} صنف</span>
+                </div>
+                <div class="card-info">
+                    <i class="bi bi-tag"></i>
+                    <span>السعر: {{ number_format($totalPrice, 2) }} د.ع</span>
+                </div>
+                @if($discount > 0)
+                <div class="card-info">
+                    <i class="bi bi-gift"></i>
+                    <span>التخفيض: <span class="text-success">{{ number_format($discount, 2) }} د.ع</span></span>
+                </div>
+                @endif
+                <div class="card-info">
+                    <i class="bi bi-cash"></i>
+                    <span><strong>الإجمالي: {{ number_format($invoice->total_amount, 2) }} د.ع</strong></span>
                 </div>
             </div>
             <div class="card-footer">
