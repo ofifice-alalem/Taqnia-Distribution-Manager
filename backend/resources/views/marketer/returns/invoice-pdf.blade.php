@@ -44,14 +44,14 @@
         <div class="info-row">
             {{ $status }} :<span class="label">{{ $labels['status'] }}</span>
         </div>
-        @if($keeperName != '---')
-        <div class="info-row">
-            {{ $keeperName }} :<span class="label">{{ $labels['keeper'] }}</span>
-        </div>
-        @endif
         @if(isset($approvedByName))
         <div class="info-row">
             {{ $approvedByName }} :<span class="label">{{ $labels['approvedBy'] }}</span>
+        </div>
+        @endif
+        @if(isset($rejectedByName))
+        <div class="info-row">
+            {{ $rejectedByName }} :<span class="label">{{ $labels['rejectedBy'] }}</span>
         </div>
         @endif
         @if(isset($documentedByName))

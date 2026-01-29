@@ -19,7 +19,7 @@
                     <tr>
                         <td><strong>#{{ $return->id }}</strong></td>
                         <td><code>{{ $return->invoice_number }}</code></td>
-                        <td>{{ $return->marketer->name }}</td>
+                        <td>{{ $return->marketer->full_name ?? $return->marketer->username }}</td>
                         <td>{{ $return->created_at }}</td>
                         <td>{{ $return->items->sum('quantity') }}</td>
                         <td>{{ $return->items->count() }}</td>
@@ -108,16 +108,20 @@
             </div>
             <div class="card-body">
                 <div class="card-info">
+                    <i class="bi bi-receipt"></i>
+                    <span><code>{{ $return->invoice_number }}</code></span>
+                </div>
+                <div class="card-info">
                     <i class="bi bi-person"></i>
-                    <span>{{ $return->marketer->name }}</span>
+                    <span>{{ $return->marketer->full_name ?? $return->marketer->username }}</span>
                 </div>
                 <div class="card-info">
                     <i class="bi bi-calendar3"></i>
-                    <span>{{ $return->created_at }}</span>
+                    <span>{{ $return->created_at->format('Y-m-d') }}</span>
                 </div>
                 <div class="card-info">
                     <i class="bi bi-boxes"></i>
-                    <span>{{ $return->items->count() }} منتج</span>
+                    <span>{{ $return->items->sum('quantity') }} قطعة - {{ $return->items->count() }} صنف</span>
                 </div>
             </div>
             <div class="card-footer">
@@ -383,7 +387,22 @@
 
 .card-info i {
     color: var(--text-muted);
-    width: 16px;
+    width: 18px;
+    font-size: 14px;
+}
+
+.card-info code {
+    background: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    color: #495057;
+}
+
+[data-theme="dark"] .card-info code {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
 }
 
 .card-footer {

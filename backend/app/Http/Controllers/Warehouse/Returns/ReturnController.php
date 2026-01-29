@@ -137,9 +137,9 @@ class ReturnController extends Controller
             'invoiceNumber' => $return->invoice_number,
             'date' => \Carbon\Carbon::parse($return->created_at)->format('Y-m-d H:i'),
             'marketerName' => $arabic->utf8Glyphs($return->marketer->full_name ?? $return->marketer->name),
-            'keeperName' => $return->keeper ? $arabic->utf8Glyphs($return->keeper->full_name ?? $return->keeper->username) : $arabic->utf8Glyphs('---'),
-            'approvedByName' => $return->approvedBy ? $arabic->utf8Glyphs($return->approvedBy->full_name ?? $return->approvedBy->username) : null,
-            'documentedByName' => $return->documentedBy ? $arabic->utf8Glyphs($return->documentedBy->full_name ?? $return->documentedBy->username) : null,
+            'approvedByName' => $return->approvedBy && $return->status == 'approved' ? $arabic->utf8Glyphs($return->approvedBy->full_name ?? $return->approvedBy->username) : null,
+            'rejectedByName' => $return->approvedBy && $return->status == 'rejected' ? $arabic->utf8Glyphs($return->approvedBy->full_name ?? $return->approvedBy->username) : null,
+            'documentedByName' => $return->documentedBy && $return->status == 'documented' ? $arabic->utf8Glyphs($return->documentedBy->full_name ?? $return->documentedBy->username) : null,
             'status' => $arabic->utf8Glyphs($statusMap[$return->status] ?? $return->status),
             'items' => $return->items->map(function($item) use ($arabic) {
                 return (object)[
@@ -151,8 +151,8 @@ class ReturnController extends Controller
             'labels' => [
                 'title' => $arabic->utf8Glyphs('فاتورة إرجاع بضاعة'),
                 'marketer' => $arabic->utf8Glyphs('المسوق'),
-                'keeper' => $arabic->utf8Glyphs('أمين المخزن'),
                 'approvedBy' => $arabic->utf8Glyphs('وافق عليه'),
+                'rejectedBy' => $arabic->utf8Glyphs('قام بالرفض'),
                 'documentedBy' => $arabic->utf8Glyphs('وثقه'),
                 'date' => $arabic->utf8Glyphs('التاريخ'),
                 'status' => $arabic->utf8Glyphs('حالة الطلب'),
