@@ -4,7 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductRequestController;
 use App\Http\Controllers\Marketer\RequestController as MarketerRequestController;
 use App\Http\Controllers\Marketer\StockController as MarketerStockController;
+use App\Http\Controllers\Marketer\Returns\ReturnController as MarketerReturnController;
 use App\Http\Controllers\Warehouse\RequestController as WarehouseRequestController;
+use App\Http\Controllers\Warehouse\Returns\ReturnController as WarehouseReturnController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 
@@ -36,6 +38,12 @@ Route::middleware(['auth', 'role:salesman'])->prefix('marketer')->name('marketer
     Route::get('/requests/{id}/print', [MarketerRequestController::class, 'printInvoice'])->name('requests.print');
     
     Route::get('/stock', [MarketerStockController::class, 'index'])->name('stock');
+    
+    Route::get('/returns', [MarketerReturnController::class, 'index'])->name('returns.index');
+    Route::get('/returns/create', [MarketerReturnController::class, 'create'])->name('returns.create');
+    Route::post('/returns', [MarketerReturnController::class, 'store'])->name('returns.store');
+    Route::get('/returns/{id}', [MarketerReturnController::class, 'show'])->name('returns.show');
+    Route::get('/returns/{id}/print', [MarketerReturnController::class, 'printInvoice'])->name('returns.print');
 });
 
 // Warehouse Keeper Routes
@@ -47,6 +55,13 @@ Route::middleware(['auth', 'role:warehouse_keeper'])->prefix('warehouse')->name(
     Route::delete('/requests/{id}/cancel', [WarehouseRequestController::class, 'cancel'])->name('requests.cancel');
     Route::get('/requests/{id}/upload-document', [WarehouseRequestController::class, 'uploadDocument'])->name('requests.upload-document');
     Route::post('/requests/{id}/store-document', [WarehouseRequestController::class, 'storeDocument'])->name('requests.store-document');
+    
+    Route::get('/returns', [WarehouseReturnController::class, 'index'])->name('returns.index');
+    Route::get('/returns/{id}', [WarehouseReturnController::class, 'show'])->name('returns.show');
+    Route::patch('/returns/{id}/approve', [WarehouseReturnController::class, 'approve'])->name('returns.approve');
+    Route::patch('/returns/{id}/reject', [WarehouseReturnController::class, 'reject'])->name('returns.reject');
+    Route::get('/returns/{id}/upload-document', [WarehouseReturnController::class, 'uploadDocument'])->name('returns.upload-document');
+    Route::post('/returns/{id}/store-document', [WarehouseReturnController::class, 'storeDocument'])->name('returns.store-document');
 });
 
 // Legacy Routes (للتوافق المؤقت)

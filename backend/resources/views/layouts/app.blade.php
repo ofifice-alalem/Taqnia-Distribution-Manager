@@ -668,6 +668,7 @@
                     @auth
                         @if(Auth::user()->isSalesman())
                         <li><a href="{{ route('marketer.stock') }}" class="nav-link {{ request()->routeIs('marketer.stock') ? 'active' : '' }}"><i class="bi bi-box-seam"></i> <span>مخزوني</span></a></li>
+                        <li><a href="{{ route('marketer.returns.index') }}" class="nav-link {{ request()->routeIs('marketer.returns.*') ? 'active' : '' }}"><i class="bi bi-arrow-return-left"></i> <span>إرجاع بضاعة</span></a></li>
                         @endif
                     @endauth
                 </ul>
@@ -678,6 +679,7 @@
                     <ul>
                         <li><a href="#" class="nav-link"><i class="bi bi-building"></i> <span>المخزن الرئيسي</span></a></li>
                         <li><a href="#" class="nav-link"><i class="bi bi-truck"></i> <span>فواتير المصنع</span></a></li>
+                        <li><a href="{{ route('warehouse.returns.index') }}" class="nav-link {{ request()->routeIs('warehouse.returns.*') ? 'active' : '' }}"><i class="bi bi-arrow-return-left"></i> <span>طلبات الإرجاع</span></a></li>
                     </ul>
                     @endif
 

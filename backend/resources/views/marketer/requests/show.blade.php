@@ -19,7 +19,7 @@
                     <i class="bi bi-printer"></i> طباعة الفاتورة
                 </a>
                 
-                @if(!$request->status || $request->status->status == 'pending')
+                @if(!$request->status || (is_object($request->status) && $request->status->status == 'pending'))
                     <button type="button" class="btn btn-danger w-100" onclick="cancelRequest({{ $request->id }})">
                         <i class="bi bi-x-circle"></i> إلغاء الطلب
                     </button>
@@ -27,7 +27,7 @@
             </div>
         </div>
         
-        @if($request->status && $request->status->status == 'approved')
+        @if($request->status && is_object($request->status) && $request->status->status == 'approved')
             <div class="card mt-3">
                 <div class="card-header bg-success text-white">
                     <h6><i class="bi bi-check-circle"></i> معلومات الموافقة</h6>
@@ -42,7 +42,7 @@
             </div>
         @endif
         
-        @if($request->status && $request->status->status == 'rejected')
+        @if($request->status && is_object($request->status) && $request->status->status == 'rejected')
             <div class="card mt-3">
                 <div class="card-header bg-danger text-white">
                     <h6><i class="bi bi-x-circle"></i> معلومات الرفض</h6>
@@ -57,7 +57,7 @@
             </div>
         @endif
         
-        @if($request->status && $request->status->status == 'cancelled')
+        @if($request->status && is_object($request->status) && $request->status->status == 'cancelled')
             <div class="card mt-3">
                 <div class="card-header bg-warning text-white">
                     <h6><i class="bi bi-ban"></i> معلومات الإلغاء</h6>
@@ -130,16 +130,16 @@
             <div class="card-header">
                 <h4><i class="bi bi-file-earmark-text"></i> تفاصيل الطلب #{{ $request->id }} - 
                     <span class="badge fs-6
-                        @if(!$request->status || $request->status->status == 'pending') bg-warning
-                        @elseif($request->status->status == 'approved') bg-success
-                        @elseif($request->status->status == 'rejected') bg-danger
-                        @elseif($request->status->status == 'cancelled') bg-warning
+                        @if(!$request->status || (is_object($request->status) && $request->status->status == 'pending')) bg-warning
+                        @elseif(is_object($request->status) && $request->status->status == 'approved') bg-success
+                        @elseif(is_object($request->status) && $request->status->status == 'rejected') bg-danger
+                        @elseif(is_object($request->status) && $request->status->status == 'cancelled') bg-warning
                         @else bg-danger
                         @endif">
-                        @if(!$request->status || $request->status->status == 'pending') قيد المراجعة
-                        @elseif($request->status->status == 'approved') موافق عليه
-                        @elseif($request->status->status == 'rejected') مرفوض
-                        @elseif($request->status->status == 'cancelled') ملغى
+                        @if(!$request->status || (is_object($request->status) && $request->status->status == 'pending')) قيد المراجعة
+                        @elseif(is_object($request->status) && $request->status->status == 'approved') موافق عليه
+                        @elseif(is_object($request->status) && $request->status->status == 'rejected') مرفوض
+                        @elseif(is_object($request->status) && $request->status->status == 'cancelled') ملغى
                         @else مرفوض
                         @endif
                     </span>
