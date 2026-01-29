@@ -79,23 +79,29 @@
                     @if($type == 'pending') badge-warning
                     @elseif($type == 'waiting-doc') badge-info
                     @elseif($type == 'documented') badge-success
-                    @else badge-danger
+                    @elseif($request->status == 'rejected') badge-danger
+                    @else badge-secondary
                     @endif">
                     @if($type == 'pending') في انتظار الموافقة
                     @elseif($type == 'waiting-doc') في انتظار التوثيق
                     @elseif($type == 'documented') موثق
-                    @else مرفوض
+                    @elseif($request->status == 'rejected') مرفوض
+                    @else ملغى
                     @endif
                 </span>
             </div>
             <div class="card-body">
+                <div class="card-info">
+                    <i class="bi bi-receipt"></i>
+                    <span>{{ $request->invoice_number }}</span>
+                </div>
                 <div class="card-info">
                     <i class="bi bi-calendar3"></i>
                     <span>{{ $request->created_at }}</span>
                 </div>
                 <div class="card-info">
                     <i class="bi bi-boxes"></i>
-                    <span>{{ $request->items->count() }} منتج</span>
+                    <span>{{ $request->items->count() }} صنف - {{ $request->items->sum('quantity') }} قطعة</span>
                 </div>
             </div>
             <div class="card-footer">
