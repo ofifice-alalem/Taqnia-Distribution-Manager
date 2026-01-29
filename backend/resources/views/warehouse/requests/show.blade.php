@@ -165,7 +165,7 @@
                     <p class="mb-3"><strong>بواسطة:</strong> أمين المخزن</p>
                     
                     <div class="mb-3">
-                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#imageModal">
+                        <button type="button" class="btn btn-outline-primary" onclick="loadWarehouseRequestImage()">
                             <i class="bi bi-eye"></i> عرض صورة الفاتورة
                         </button>
                     </div>
@@ -185,15 +185,21 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body text-center">
-                            <img src="{{ asset('storage/' . $documentInfo->signed_image) }}" 
+                            <img id="warehouseRequestImage" src="" 
                                  class="img-fluid" 
                                  alt="صورة الفاتورة"
-                                 style="max-height: 70vh;">
+                                 style="max-height: 70vh; display: none;">
+                            <div id="warehouseImageLoader" class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="modal-footer">
-                            <a href="{{ asset('storage/' . $documentInfo->signed_image) }}" 
+                            <a id="warehouseOpenImageLink" href="" 
                                target="_blank" 
-                               class="btn btn-primary">
+                               class="btn btn-primary"
+                               style="display: none;">
                                 <i class="bi bi-box-arrow-up-right"></i> فتح في نافذة جديدة
                             </a>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
@@ -288,4 +294,30 @@
 </div>
 @endif
 @endif
+
+<script>
+let warehouseImageLoaded = false;
+
+function loadWarehouseRequestImage() {
+    if (!warehouseImageLoaded) {
+        const requestImage = document.getElementById('warehouseRequestImage');
+        const imageLoader = document.getElementById('warehouseImageLoader');
+        const openImageLink = document.getElementById('warehouseOpenImageLink');
+        const imagePath = "{{ asset('storage/' . $documentInfo->signed_image) }}";
+        
+        requestImage.onload = function() {
+            imageLoader.style.display = 'none';
+            requestImage.style.display = 'block';
+            openImageLink.style.display = 'inline-block';
+            warehouseImageLoaded = true;
+        };
+        
+        requestImage.src = imagePath;
+        openImageLink.href = imagePath;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    modal.show();
+}
+</script>
 @endsection

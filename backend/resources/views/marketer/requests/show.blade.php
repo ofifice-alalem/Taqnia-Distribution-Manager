@@ -85,7 +85,7 @@
                     <p class="mb-3"><strong>بواسطة:</strong> أمين المخزن</p>
                     
                     <div class="mb-3">
-                        <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#imageModal">
+                        <button type="button" class="btn btn-outline-primary w-100" onclick="loadRequestImage()">
                             <i class="bi bi-eye"></i> عرض الصورة
                         </button>
                     </div>
@@ -105,15 +105,21 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body text-center">
-                            <img src="{{ asset('storage/' . $documentInfo->signed_image) }}" 
+                            <img id="requestImage" src="" 
                                  class="img-fluid" 
                                  alt="صورة الفاتورة"
-                                 style="max-height: 70vh;">
+                                 style="max-height: 70vh; display: none;">
+                            <div id="imageLoader" class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="modal-footer">
-                            <a href="{{ asset('storage/' . $documentInfo->signed_image) }}" 
+                            <a id="openImageLink" href="" 
                                target="_blank" 
-                               class="btn btn-primary">
+                               class="btn btn-primary"
+                               style="display: none;">
                                 <i class="bi bi-box-arrow-up-right"></i> فتح في نافذة جديدة
                             </a>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
@@ -336,6 +342,30 @@ function cancelRequest(id) {
     if(confirm('هل أنت متأكد من إلغاء هذا الطلب؟')) {
         window.location.href = `/marketer/requests/${id}/cancel`;
     }
+}
+
+let imageLoaded = false;
+
+function loadRequestImage() {
+    if (!imageLoaded) {
+        const requestImage = document.getElementById('requestImage');
+        const imageLoader = document.getElementById('imageLoader');
+        const openImageLink = document.getElementById('openImageLink');
+        const imagePath = "{{ asset('storage/' . $documentInfo->signed_image) }}";
+        
+        requestImage.onload = function() {
+            imageLoader.style.display = 'none';
+            requestImage.style.display = 'block';
+            openImageLink.style.display = 'inline-block';
+            imageLoaded = true;
+        };
+        
+        requestImage.src = imagePath;
+        openImageLink.href = imagePath;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    modal.show();
 }
 </script>
 @endsection

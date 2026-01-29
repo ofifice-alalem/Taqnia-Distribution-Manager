@@ -46,7 +46,12 @@
                 <h5>الفاتورة المختومة</h5>
             </div>
             <div class="card-body">
-                <img src="{{ asset('storage/' . $return->stamped_image) }}" alt="الفاتورة المختومة" class="img-fluid">
+                <div id="imageContainer" style="display: none;">
+                    <img id="stampedImage" src="" alt="الفاتورة المختومة" class="img-fluid">
+                </div>
+                <button id="loadImageBtn" class="btn btn-primary w-100" onclick="loadImage()">
+                    <i class="bi bi-image"></i> عرض الفاتورة المختومة
+                </button>
             </div>
         </div>
         @endif
@@ -86,9 +91,22 @@
                 @if($return->keeper)
                 <div class="mb-3">
                     <strong>أمين المخزن:</strong>
-                    <p>{{ $return->keeper->name }}</p>
+                    <p>{{ $return->keeper->full_name ?? $return->keeper->username }}</p>
                 </div>
                 @endif
+                <div class="mb-3">
+                    <strong>إجمالي الكميات:</strong>
+                    <p>{{ $return->items->sum('quantity') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        @if($return->approvedBy || $return->documentedBy)
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>معلومات المعالجة</h5>
+            </div>
+            <div class="card-body">
                 @if($return->approvedBy)
                 <div class="mb-3">
                     <strong>وافق عليه:</strong>
@@ -101,12 +119,9 @@
                     <p>{{ $return->documentedBy->full_name ?? $return->documentedBy->username }}</p>
                 </div>
                 @endif
-                <div class="mb-3">
-                    <strong>إجمالي الكميات:</strong>
-                    <p>{{ $return->items->sum('quantity') }}</p>
-                </div>
             </div>
         </div>
+        @endif
         
         @if($return->status == 'approved')
         <div class="card mt-3">
@@ -221,5 +236,23 @@ code {
     background: rgba(255, 255, 255, 0.1);
     color: #e0e0e0;
 }
+
+@media (max-width: 768px) {
+    .row {
+        margin-bottom: 60px;
+    }
+}
 </style>
+
+<script>
+function loadImage() {
+    const imageContainer = document.getElementById('imageContainer');
+    const stampedImage = document.getElementById('stampedImage');
+    const loadBtn = document.getElementById('loadImageBtn');
+    
+    stampedImage.src = "{{ asset('storage/' . $return->stamped_image) }}";
+    imageContainer.style.display = 'block';
+    loadBtn.style.display = 'none';
+}
+</script>
 @endsection
