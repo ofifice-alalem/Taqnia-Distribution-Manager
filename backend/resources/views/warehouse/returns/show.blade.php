@@ -58,7 +58,56 @@
     </div>
 
     <div class="col-md-4">
-        <div class="card mb-4">
+        @if($return->status == 'pending')
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>الإجراءات</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ route('warehouse.returns.approve', $return->id) }}" method="POST" class="mb-2">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-check-circle"></i> موافقة
+                    </button>
+                </form>
+                <form action="{{ route('warehouse.returns.reject', $return->id) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="bi bi-x-circle"></i> رفض
+                    </button>
+                </form>
+            </div>
+        </div>
+        @elseif($return->status == 'approved')
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>الإجراءات</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ route('warehouse.returns.upload-document', $return->id) }}" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-cloud-upload"></i> رفع الفاتورة المختومة
+                </a>
+                <a href="{{ route('warehouse.returns.print', $return->id) }}" class="btn btn-secondary w-100">
+                    <i class="bi bi-printer"></i> طباعة الفاتورة
+                </a>
+            </div>
+        </div>
+        @elseif(in_array($return->status, ['documented', 'rejected', 'cancelled']))
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>الإجراءات</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ route('warehouse.returns.print', $return->id) }}" class="btn btn-secondary w-100">
+                    <i class="bi bi-printer"></i> طباعة الفاتورة
+                </a>
+            </div>
+        </div>
+        @endif
+        
+        <div class="card">
             <div class="card-header">
                 <h5>معلومات الطلب</h5>
             </div>
@@ -82,11 +131,13 @@
                             @if($return->status == 'pending') badge-warning
                             @elseif($return->status == 'approved') badge-info
                             @elseif($return->status == 'documented') badge-success
+                            @elseif($return->status == 'cancelled') badge-secondary
                             @else badge-danger
                             @endif">
                             @if($return->status == 'pending') في انتظار الموافقة
                             @elseif($return->status == 'approved') موافق عليه
                             @elseif($return->status == 'documented') موثق
+                            @elseif($return->status == 'cancelled') ملغى
                             @else مرفوض
                             @endif
                         </span>
@@ -123,35 +174,6 @@
                     <p>{{ $return->documentedBy->full_name ?? $return->documentedBy->username }}</p>
                 </div>
                 @endif
-            </div>
-        </div>
-        @endif
-
-        @if($return->status == 'pending')
-        <div class="card">
-            <div class="card-body">
-                <form action="{{ route('warehouse.returns.approve', $return->id) }}" method="POST" class="mb-2">
-                    @csrf
-                    @method('PATCH')
-                    <button type="submit" class="btn btn-success w-100">
-                        <i class="bi bi-check-circle"></i> موافقة
-                    </button>
-                </form>
-                <form action="{{ route('warehouse.returns.reject', $return->id) }}" method="POST">
-                    @csrf
-                    @method('PATCH')
-                    <button type="submit" class="btn btn-danger w-100">
-                        <i class="bi bi-x-circle"></i> رفض
-                    </button>
-                </form>
-            </div>
-        </div>
-        @elseif($return->status == 'approved')
-        <div class="card">
-            <div class="card-body">
-                <a href="{{ route('warehouse.returns.upload-document', $return->id) }}" class="btn btn-primary w-100">
-                    <i class="bi bi-cloud-upload"></i> رفع الفاتورة المختومة
-                </a>
             </div>
         </div>
         @endif
@@ -244,6 +266,11 @@
 .badge-danger {
     background: #f8d7da;
     color: #842029;
+}
+
+.badge-secondary {
+    background: #e2e3e5;
+    color: #41464b;
 }
 
 code {

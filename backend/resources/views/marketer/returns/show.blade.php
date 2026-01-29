@@ -58,6 +58,35 @@
     </div>
 
     <div class="col-md-4">
+        @if(in_array($return->status, ['pending', 'approved']))
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>الأجراءات</h5>
+            </div>
+            <div class="card-body">
+                <button type="button" class="btn btn-danger w-100 mb-2" onclick="cancelReturn({{ $return->id }})">
+                    <i class="bi bi-x-circle"></i> إلغاء الطلب
+                </button>
+                @if($return->status == 'approved')
+                    <a href="{{ route('marketer.returns.print', $return->id) }}" class="btn btn-secondary w-100">
+                        <i class="bi bi-printer"></i> طباعة الفاتورة
+                    </a>
+                @endif
+            </div>
+        </div>
+        @elseif(in_array($return->status, ['documented', 'rejected', 'cancelled']))
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>الأجراءات</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ route('marketer.returns.print', $return->id) }}" class="btn btn-secondary w-100">
+                    <i class="bi bi-printer"></i> طباعة الفاتورة
+                </a>
+            </div>
+        </div>
+        @endif
+        
         <div class="card">
             <div class="card-header">
                 <h5>معلومات الطلب</h5>
@@ -78,11 +107,13 @@
                             @if($return->status == 'pending') badge-warning
                             @elseif($return->status == 'approved') badge-info
                             @elseif($return->status == 'documented') badge-success
+                            @elseif($return->status == 'cancelled') badge-secondary
                             @else badge-danger
                             @endif">
                             @if($return->status == 'pending') في انتظار الموافقة
                             @elseif($return->status == 'approved') موافق عليه
                             @elseif($return->status == 'documented') موثق
+                            @elseif($return->status == 'cancelled') ملغى
                             @else مرفوض
                             @endif
                         </span>
@@ -119,16 +150,6 @@
                     <p>{{ $return->documentedBy->full_name ?? $return->documentedBy->username }}</p>
                 </div>
                 @endif
-            </div>
-        </div>
-        @endif
-        
-        @if($return->status == 'approved')
-        <div class="card mt-3">
-            <div class="card-body">
-                <a href="{{ route('marketer.returns.print', $return->id) }}" class="btn btn-primary w-100">
-                    <i class="bi bi-printer"></i> طباعة الفاتورة
-                </a>
             </div>
         </div>
         @endif
@@ -223,6 +244,11 @@
     color: #842029;
 }
 
+.badge-secondary {
+    background: #e2e3e5;
+    color: #41464b;
+}
+
 code {
     background: #e9ecef;
     padding: 6px 12px;
@@ -253,6 +279,12 @@ function loadImage() {
     stampedImage.src = "{{ asset('storage/' . $return->stamped_image) }}";
     imageContainer.style.display = 'block';
     loadBtn.style.display = 'none';
+}
+
+function cancelReturn(id) {
+    if(confirm('هل أنت متأكد من إلغاء هذا الطلب؟')) {
+        window.location.href = `/marketer/returns/${id}/cancel`;
+    }
 }
 </script>
 @endsection

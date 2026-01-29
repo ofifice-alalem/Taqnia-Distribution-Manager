@@ -49,6 +49,16 @@
             {{ $keeperName }} :<span class="label">{{ $labels['keeper'] }}</span>
         </div>
         @endif
+        @if(isset($approvedByName))
+        <div class="info-row">
+            {{ $approvedByName }} :<span class="label">{{ $labels['approvedBy'] }}</span>
+        </div>
+        @endif
+        @if(isset($documentedByName))
+        <div class="info-row">
+            {{ $documentedByName }} :<span class="label">{{ $labels['documentedBy'] }}</span>
+        </div>
+        @endif
     </div>
 
     <table>

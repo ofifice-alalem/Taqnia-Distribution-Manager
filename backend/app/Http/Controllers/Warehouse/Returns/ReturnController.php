@@ -25,7 +25,7 @@ class ReturnController extends Controller
         $documentedReturns = $returns->where('status', 'documented');
         $approvedReturns = $returns->where('status', 'approved');
         $pendingReturns = $returns->where('status', 'pending');
-        $rejectedReturns = $returns->where('status', 'rejected');
+        $rejectedReturns = $returns->whereIn('status', ['rejected', 'cancelled']);
         
         $documentedCount = $documentedReturns->count();
         $approvedCount = $approvedReturns->count();
@@ -52,6 +52,7 @@ class ReturnController extends Controller
         $return = MarketerReturnRequest::findOrFail($id);
         $return->update([
             'status' => 'approved',
+            'keeper_id' => Auth::id(),
             'approved_by' => Auth::id()
         ]);
         
@@ -63,6 +64,7 @@ class ReturnController extends Controller
         $return = MarketerReturnRequest::findOrFail($id);
         $return->update([
             'status' => 'rejected',
+            'keeper_id' => Auth::id(),
             'approved_by' => Auth::id()
         ]);
         
@@ -115,5 +117,56 @@ class ReturnController extends Controller
             DB::rollBack();
             return back()->with('error', 'حدث خطأ أثناء التوثيق');
         }
+    }
+
+    public function printInvoice($id)
+    {
+        $return = MarketerReturnRequest::with(['items.product', 'marketer', 'keeper', 'approvedBy', 'documentedBy'])->findOrFail($id);
+        
+        $arabic = new \ArPHP\I18N\Arabic();
+        
+        $statusMap = [
+            'pending' => 'في انتظار الموافقة',
+            'approved' => 'موافق عليه',
+            'documented' => 'موثق',
+            'rejected' => 'مرفوض',
+            'cancelled' => 'ملغى'
+        ];
+        
+        $data = [
+            'invoiceNumber' => $return->invoice_number,
+            'date' => \Carbon\Carbon::parse($return->created_at)->format('Y-m-d H:i'),
+            'marketerName' => $arabic->utf8Glyphs($return->marketer->full_name ?? $return->marketer->name),
+            'keeperName' => $return->keeper ? $arabic->utf8Glyphs($return->keeper->full_name ?? $return->keeper->username) : $arabic->utf8Glyphs('---'),
+            'approvedByName' => $return->approvedBy ? $arabic->utf8Glyphs($return->approvedBy->full_name ?? $return->approvedBy->username) : null,
+            'documentedByName' => $return->documentedBy ? $arabic->utf8Glyphs($return->documentedBy->full_name ?? $return->documentedBy->username) : null,
+            'status' => $arabic->utf8Glyphs($statusMap[$return->status] ?? $return->status),
+            'items' => $return->items->map(function($item) use ($arabic) {
+                return (object)[
+                    'name' => $arabic->utf8Glyphs($item->product->name),
+                    'quantity' => $item->quantity
+                ];
+            }),
+            'totalQty' => $return->items->sum('quantity'),
+            'labels' => [
+                'title' => $arabic->utf8Glyphs('فاتورة إرجاع بضاعة'),
+                'marketer' => $arabic->utf8Glyphs('المسوق'),
+                'keeper' => $arabic->utf8Glyphs('أمين المخزن'),
+                'approvedBy' => $arabic->utf8Glyphs('وافق عليه'),
+                'documentedBy' => $arabic->utf8Glyphs('وثقه'),
+                'date' => $arabic->utf8Glyphs('التاريخ'),
+                'status' => $arabic->utf8Glyphs('حالة الطلب'),
+                'product' => $arabic->utf8Glyphs('المنتج'),
+                'quantity' => $arabic->utf8Glyphs('الكمية'),
+                'total' => $arabic->utf8Glyphs('الإجمالي'),
+                'marketerSign' => $arabic->utf8Glyphs('توقيع المسوق'),
+                'keeperSign' => $arabic->utf8Glyphs('توقيع أمين المخزن'),
+            ]
+        ];
+        
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('marketer.returns.invoice-pdf', $data);
+        
+        return $pdf->download('return-invoice-' . $return->invoice_number . '.pdf');
     }
 }

@@ -23,7 +23,7 @@ class ReturnController extends Controller
         $documentedReturns = $returns->where('status', 'documented');
         $approvedReturns = $returns->where('status', 'approved');
         $pendingReturns = $returns->where('status', 'pending');
-        $rejectedReturns = $returns->where('status', 'rejected');
+        $rejectedReturns = $returns->whereIn('status', ['rejected', 'cancelled']);
         
         $documentedCount = $documentedReturns->count();
         $approvedCount = $approvedReturns->count();
@@ -92,6 +92,21 @@ class ReturnController extends Controller
         }
     }
 
+    public function cancel($id)
+    {
+        $return = MarketerReturnRequest::where('marketer_id', Auth::id())
+            ->where('id', $id)
+            ->firstOrFail();
+
+        if (!in_array($return->status, ['pending', 'approved'])) {
+            return redirect()->back()->with('error', 'لا يمكن إلغاء هذا الطلب');
+        }
+
+        $return->update(['status' => 'cancelled']);
+        
+        return redirect()->route('marketer.returns.index')->with('success', 'تم إلغاء طلب الإرجاع بنجاح');
+    }
+
     public function printInvoice($id)
     {
         $return = MarketerReturnRequest::with(['items.product', 'marketer', 'keeper', 'approvedBy', 'documentedBy'])
@@ -104,7 +119,8 @@ class ReturnController extends Controller
             'pending' => 'في انتظار الموافقة',
             'approved' => 'موافق عليه',
             'documented' => 'موثق',
-            'rejected' => 'مرفوض'
+            'rejected' => 'مرفوض',
+            'cancelled' => 'ملغى'
         ];
         
         $data = [

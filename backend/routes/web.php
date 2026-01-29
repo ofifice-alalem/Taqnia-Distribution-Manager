@@ -43,6 +43,7 @@ Route::middleware(['auth', 'role:salesman'])->prefix('marketer')->name('marketer
     Route::get('/returns/create', [MarketerReturnController::class, 'create'])->name('returns.create');
     Route::post('/returns', [MarketerReturnController::class, 'store'])->name('returns.store');
     Route::get('/returns/{id}', [MarketerReturnController::class, 'show'])->name('returns.show');
+    Route::get('/returns/{id}/cancel', [MarketerReturnController::class, 'cancel'])->name('returns.cancel');
     Route::get('/returns/{id}/print', [MarketerReturnController::class, 'printInvoice'])->name('returns.print');
 });
 
@@ -60,6 +61,7 @@ Route::middleware(['auth', 'role:warehouse_keeper'])->prefix('warehouse')->name(
     
     Route::get('/returns', [WarehouseReturnController::class, 'index'])->name('returns.index');
     Route::get('/returns/{id}', [WarehouseReturnController::class, 'show'])->name('returns.show');
+    Route::get('/returns/{id}/print', [WarehouseReturnController::class, 'printInvoice'])->name('returns.print');
     Route::patch('/returns/{id}/approve', [WarehouseReturnController::class, 'approve'])->name('returns.approve');
     Route::patch('/returns/{id}/reject', [WarehouseReturnController::class, 'reject'])->name('returns.reject');
     Route::get('/returns/{id}/upload-document', [WarehouseReturnController::class, 'uploadDocument'])->name('returns.upload-document');

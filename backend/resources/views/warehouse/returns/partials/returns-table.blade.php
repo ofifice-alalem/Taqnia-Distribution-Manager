@@ -28,12 +28,14 @@
                                 @if($type == 'pending') badge-warning
                                 @elseif($type == 'approved') badge-info
                                 @elseif($type == 'documented') badge-success
-                                @else badge-danger
+                                @elseif($return->status == 'rejected') badge-danger
+                                @else badge-secondary
                                 @endif">
                                 @if($type == 'pending') في انتظار الموافقة
                                 @elseif($type == 'approved') موافق عليه
                                 @elseif($type == 'documented') موثق
-                                @else مرفوض
+                                @elseif($return->status == 'rejected') مرفوض
+                                @else ملغي
                                 @endif
                             </span>
                         </td>
@@ -93,12 +95,14 @@
                     @if($type == 'pending') badge-warning
                     @elseif($type == 'approved') badge-info
                     @elseif($type == 'documented') badge-success
-                    @else badge-danger
+                    @elseif($return->status == 'rejected') badge-danger
+                    @else badge-secondary
                     @endif">
                     @if($type == 'pending') في انتظار الموافقة
                     @elseif($type == 'approved') موافق عليه
                     @elseif($type == 'documented') موثق
-                    @else مرفوض
+                    @elseif($return->status == 'rejected') مرفوض
+                    @else ملغي
                     @endif
                 </span>
             </div>
@@ -303,6 +307,11 @@
 .badge-danger {
     background: #f8d7da;
     color: #842029;
+}
+
+.badge-secondary {
+    background: #e2e3e5;
+    color: #383d41;
 }
 
 .empty-cell {
