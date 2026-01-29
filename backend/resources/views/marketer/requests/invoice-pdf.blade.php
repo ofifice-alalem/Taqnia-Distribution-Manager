@@ -6,26 +6,32 @@
     <style>
         @page { margin: 15px; }
         body { font-family: 'DejaVu Sans'; color: #333; font-size: 12px; margin: 0; }
-        .header { text-align: center; margin-bottom: 15px; background-color: #6366f1; color: white; padding: 12px; border-radius: 6px; }
-        .header h1 { margin: 0 0 5px 0; font-size: 20px; font-weight: bold; }
-        .header h2 { margin: 0; font-size: 16px; color: #e0e7ff; font-weight: normal; }
-        .info-box { background-color: #f8f9fa; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #e5e7eb; text-align: right; }
+        .header { margin-bottom: 15px; background-color: #333; color: white; padding: 12px; border-radius: 6px; display: table; width: 100%; }
+        .header-right { display: table-cell; text-align: right; width: 50%; vertical-align: middle; }
+        .header-left { display: table-cell; text-align: left; width: 50%; vertical-align: middle; }
+        .header h1 { margin: 0; font-size: 20px; font-weight: bold; }
+        .header h2 { margin: 0; font-size: 20px; font-weight: bold; color: white; }
+        .info-box { background-color: #f8f9fa; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #333; text-align: right; }
         .info-row { display: inline-block; width: 48%; margin-bottom: 4px; font-size: 11px; text-align: right; }
-        .label { font-weight: bold; color: #6366f1; font-size: 11px; }
+        .label { font-weight: bold; color: #333; font-size: 11px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background-color: #6366f1; color: white; padding: 8px; text-align: center; font-weight: bold; font-size: 12px; }
-        td { border: 1px solid #e5e7eb; padding: 6px; background-color: #ffffff; font-size: 11px; text-align: center; }
-        tr:nth-child(even) td { background-color: #f9fafb; }
-        .total-box { background-color: #10b981; color: white; padding: 10px; border-radius: 6px; margin-top: 12px; text-align: center; }
-        .total-box .amount { font-size: 20px; font-weight: bold; margin-top: 3px; }
+        th { background-color: #333; color: white; padding: 8px; text-align: center; font-weight: bold; font-size: 12px; }
+        td { border: 1px solid #333; padding: 6px; background-color: #ffffff; font-size: 11px; text-align: center; }
+        tr:nth-child(even) td { background-color: #f5f5f5; }
+        .total-row { background-color: #f0f0f0; font-weight: bold; font-size: 12px; }
+        .total-row td { background-color: #f0f0f0; color: #000; border: 1px solid #333; font-weight: bold; }
         .signatures { position: fixed; bottom: 15px; left: 15px; right: 15px; }
         .signature-box { display: inline-block; width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 30px; margin: 0 2%; font-size: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>{{ $title }}</h1>
-        <h2>#{{ $invoiceNumber }}</h2>
+        <div class="header-left">
+            <h2>#{{ $invoiceNumber }}</h2>
+        </div>
+        <div class="header-right">
+            <h1>{{ $title }}</h1>
+        </div>
     </div>
 
     <div class="info-box">
@@ -65,13 +71,12 @@
                 <td>{{ $index + 1 }}</td>
             </tr>
             @endforeach
+            <tr class="total-row">
+                <td>{{ $labels['currency'] }} {{ number_format($total, 2) }}</td>
+                <td colspan="4">{{ $labels['grandTotal'] }}</td>
+            </tr>
         </tbody>
     </table>
-
-    <div class="total-box">
-        <div>{{ $labels['grandTotal'] }}</div>
-        <div class="amount">{{ $labels['currency'] }} {{ number_format($total, 2) }}</div>
-    </div>
 
     <div class="signatures">
         <div class="signature-box">{{ $labels['marketerSign'] }}</div>
