@@ -665,6 +665,11 @@
                 <div class="nav-group">الرئيسية</div>
                 <ul>
                     <li><a href="{{ route('requests.index') }}" class="nav-link {{ request()->routeIs('marketer.requests.*', 'warehouse.requests.*') ? 'active' : '' }}"><i class="bi bi-list-ul"></i> <span>@auth @if(Auth::user()->isSalesman()) التعبئة و الطلبات السابقة @else الطلبات @endif @else الطلبات @endauth</span></a></li>
+                    @auth
+                        @if(Auth::user()->isSalesman())
+                        <li><a href="{{ route('marketer.stock') }}" class="nav-link {{ request()->routeIs('marketer.stock') ? 'active' : '' }}"><i class="bi bi-box-seam"></i> <span>مخزوني</span></a></li>
+                        @endif
+                    @endauth
                 </ul>
 
                 @auth

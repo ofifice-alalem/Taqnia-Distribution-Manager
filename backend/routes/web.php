@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductRequestController;
 use App\Http\Controllers\Marketer\RequestController as MarketerRequestController;
+use App\Http\Controllers\Marketer\StockController as MarketerStockController;
 use App\Http\Controllers\Warehouse\RequestController as WarehouseRequestController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -33,6 +34,8 @@ Route::middleware(['auth', 'role:salesman'])->prefix('marketer')->name('marketer
     Route::get('/requests/{id}', [MarketerRequestController::class, 'show'])->name('requests.show');
     Route::get('/requests/{id}/cancel', [MarketerRequestController::class, 'cancel'])->name('requests.cancel');
     Route::get('/requests/{id}/print', [MarketerRequestController::class, 'printInvoice'])->name('requests.print');
+    
+    Route::get('/stock', [MarketerStockController::class, 'index'])->name('stock');
 });
 
 // Warehouse Keeper Routes
