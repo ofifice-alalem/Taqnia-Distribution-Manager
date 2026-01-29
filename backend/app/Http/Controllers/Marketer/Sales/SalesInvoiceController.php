@@ -56,8 +56,14 @@ class SalesInvoiceController extends Controller
         $marketerStock = \App\Models\Stock\MarketerActualStock::where('marketer_id', Auth::id())
             ->with('product')
             ->get();
+        
+        // جلب العروض النشطة
+        $promotions = \App\Models\Promotion\ProductPromotion::active()
+            ->with('product')
+            ->get()
+            ->keyBy('product_id');
 
-        return view('marketer.sales.create', compact('stores', 'products', 'marketerStock'));
+        return view('marketer.sales.create', compact('stores', 'products', 'marketerStock', 'promotions'));
     }
 
     public function show($id)

@@ -7,6 +7,7 @@ use App\Models\Sales\SalesInvoiceItem;
 use App\Models\Stock\MarketerActualStock;
 use App\Models\Stock\StorePendingStock;
 use App\Models\Product;
+use App\Models\Promotion\ProductPromotion;
 use Illuminate\Support\Facades\DB;
 
 class SalesInvoiceService
@@ -43,30 +44,42 @@ class SalesInvoiceService
             // إضافة المنتجات
             foreach ($items as $item) {
                 $product = Product::findOrFail($item['product_id']);
+                $quantity = $item['quantity'];
+                $free_quantity = $item['free_quantity'] ?? 0;
+                $promotion_id = $item['promotion_id'] ?? null;
+                
                 $unit_price = $product->current_price;
-                $total_price = $unit_price * $item['quantity'];
+                $total_quantity = $quantity + $free_quantity;
+                
+                // حساب السعر بعد التخفيض
+                $subtotal = $total_quantity * $unit_price;
+                $discount = $free_quantity * $unit_price;
+                $total_price = $subtotal - $discount;
+                
                 $total += $total_price;
 
                 // حفظ تفاصيل الفاتورة
                 SalesInvoiceItem::create([
                     'invoice_id' => $invoice->id,
                     'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
+                    'quantity' => $quantity,
+                    'free_quantity' => $free_quantity,
+                    'promotion_id' => $promotion_id,
                     'unit_price' => $unit_price,
                     'total_price' => $total_price,
                 ]);
 
-                // خصم من مخزون المسوق
+                // خصم من مخزون المسوق (الكمية الكلية)
                 MarketerActualStock::where('marketer_id', $marketer_id)
                     ->where('product_id', $item['product_id'])
-                    ->decrement('quantity', $item['quantity']);
+                    ->decrement('quantity', $total_quantity);
 
-                // إضافة للمخزون المرحلي
+                // إضافة للمخزون المرحلي (الكمية الكلية)
                 StorePendingStock::create([
                     'store_id' => $store_id,
                     'sales_invoice_id' => $invoice->id,
                     'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
+                    'quantity' => $total_quantity,
                 ]);
             }
 

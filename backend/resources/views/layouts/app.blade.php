@@ -688,6 +688,7 @@
                     @if(Auth::user()->isAdmin())
                     <div class="nav-group">الإدارة</div>
                     <ul>
+                        <li><a href="{{ route('admin.promotions.index') }}" class="nav-link {{ request()->routeIs('admin.promotions.*') ? 'active' : '' }}"><i class="bi bi-gift"></i> <span>عروض التخفيض</span></a></li>
                         <li><a href="#" class="nav-link"><i class="bi bi-people"></i> <span>المستخدمين</span></a></li>
                         <li><a href="#" class="nav-link"><i class="bi bi-box-seam"></i> <span>المنتجات</span></a></li>
                         <li><a href="#" class="nav-link"><i class="bi bi-shop"></i> <span>المتاجر</span></a></li>

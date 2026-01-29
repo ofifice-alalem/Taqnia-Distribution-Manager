@@ -9,6 +9,7 @@ use App\Http\Controllers\Marketer\Sales\SalesInvoiceController;
 use App\Http\Controllers\Warehouse\RequestController as WarehouseRequestController;
 use App\Http\Controllers\Warehouse\Returns\ReturnController as WarehouseReturnController;
 use App\Http\Controllers\Warehouse\Sales\SalesConfirmationController;
+use App\Http\Controllers\Admin\Promotions\PromotionController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 
@@ -81,6 +82,17 @@ Route::middleware(['auth', 'role:warehouse_keeper'])->prefix('warehouse')->name(
     Route::get('/sales', [SalesConfirmationController::class, 'index'])->name('sales.index');
     Route::get('/sales/{id}', [SalesConfirmationController::class, 'show'])->name('sales.show');
     Route::post('/sales/{invoiceId}/confirm', [SalesConfirmationController::class, 'confirm'])->name('sales.confirm');
+});
+
+// Admin Routes
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
+    Route::get('/promotions/create', [PromotionController::class, 'create'])->name('promotions.create');
+    Route::post('/promotions', [PromotionController::class, 'store'])->name('promotions.store');
+    Route::get('/promotions/{id}/edit', [PromotionController::class, 'edit'])->name('promotions.edit');
+    Route::put('/promotions/{id}', [PromotionController::class, 'update'])->name('promotions.update');
+    Route::post('/promotions/{id}/toggle', [PromotionController::class, 'toggleStatus'])->name('promotions.toggle');
+    Route::delete('/promotions/{id}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
 });
 
 // Legacy Routes (للتوافق المؤقت)

@@ -30,12 +30,17 @@
                         <div id="products-container">
                             <div class="product-row border rounded p-3 mb-2">
                                 <div class="row">
-                                    <div class="col-md-8">
+                                    <div class="col-md-6">
                                         <label class="form-label">المنتج</label>
                                         <select name="items[0][product_id]" class="form-select product-select" required>
                                             <option value="">اختر المنتج</option>
                                             @foreach($marketerStock as $stock)
-                                                <option value="{{ $stock->product_id }}" data-stock="{{ $stock->quantity }}" data-price="{{ $stock->product->current_price }}">
+                                                <option value="{{ $stock->product_id }}" 
+                                                    data-stock="{{ $stock->quantity }}" 
+                                                    data-price="{{ $stock->product->current_price }}"
+                                                    data-promo-min="{{ $promotions[$stock->product_id]->min_quantity ?? 0 }}"
+                                                    data-promo-free="{{ $promotions[$stock->product_id]->free_quantity ?? 0 }}"
+                                                    data-promo-id="{{ $promotions[$stock->product_id]->id ?? '' }}">
                                                     {{ $stock->product->name }} (متوفر: {{ $stock->quantity }}) - {{ number_format($stock->product->current_price, 2) }} د.ع
                                                 </option>
                                             @endforeach
@@ -45,10 +50,20 @@
                                         <label class="form-label">الكمية</label>
                                         <input type="number" name="items[0][quantity]" class="form-control quantity-input" min="1" required>
                                     </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">هدية</label>
+                                        <input type="number" name="items[0][free_quantity]" class="form-control free-quantity-input" value="0" readonly>
+                                        <input type="hidden" name="items[0][promotion_id]" class="promotion-id-input">
+                                    </div>
                                     <div class="col-md-2 d-flex align-items-end">
                                         <button type="button" class="btn btn-danger remove-product" disabled>
                                             <i class="bi bi-trash"></i>
                                         </button>
+                                    </div>
+                                </div>
+                                <div class="promo-alert" style="display:none; margin-top:10px;">
+                                    <div class="alert alert-success mb-0">
+                                        <i class="bi bi-gift"></i> <span class="promo-text"></span>
                                     </div>
                                 </div>
                             </div>
@@ -83,12 +98,17 @@ document.getElementById('add-product').addEventListener('click', function() {
     newRow.className = 'product-row border rounded p-3 mb-2';
     newRow.innerHTML = `
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <label class="form-label">المنتج</label>
                 <select name="items[${productIndex}][product_id]" class="form-select product-select" required>
                     <option value="">اختر المنتج</option>
                     @foreach($marketerStock as $stock)
-                        <option value="{{ $stock->product_id }}" data-stock="{{ $stock->quantity }}" data-price="{{ $stock->product->current_price }}">
+                        <option value="{{ $stock->product_id }}" 
+                            data-stock="{{ $stock->quantity }}" 
+                            data-price="{{ $stock->product->current_price }}"
+                            data-promo-min="{{ $promotions[$stock->product_id]->min_quantity ?? 0 }}"
+                            data-promo-free="{{ $promotions[$stock->product_id]->free_quantity ?? 0 }}"
+                            data-promo-id="{{ $promotions[$stock->product_id]->id ?? '' }}">
                             {{ $stock->product->name }} (متوفر: {{ $stock->quantity }}) - {{ number_format($stock->product->current_price, 2) }} د.ع
                         </option>
                     @endforeach
@@ -98,10 +118,20 @@ document.getElementById('add-product').addEventListener('click', function() {
                 <label class="form-label">الكمية</label>
                 <input type="number" name="items[${productIndex}][quantity]" class="form-control quantity-input" min="1" required>
             </div>
+            <div class="col-md-2">
+                <label class="form-label">هدية</label>
+                <input type="number" name="items[${productIndex}][free_quantity]" class="form-control free-quantity-input" value="0" readonly>
+                <input type="hidden" name="items[${productIndex}][promotion_id]" class="promotion-id-input">
+            </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="button" class="btn btn-danger remove-product">
                     <i class="bi bi-trash"></i>
                 </button>
+            </div>
+        </div>
+        <div class="promo-alert" style="display:none; margin-top:10px;">
+            <div class="alert alert-success mb-0">
+                <i class="bi bi-gift"></i> <span class="promo-text"></span>
             </div>
         </div>
     `;
@@ -126,19 +156,42 @@ function updateRemoveButtons() {
     });
 }
 
-document.addEventListener('change', function(e) {
+// التحقق من العروض
+ document.addEventListener('input', function(e) {
     if (e.target.classList.contains('quantity-input')) {
         const row = e.target.closest('.product-row');
         const productSelect = row.querySelector('.product-select');
         const selectedOption = productSelect.options[productSelect.selectedIndex];
+        const quantity = parseInt(e.target.value) || 0;
         
-        if (selectedOption && selectedOption.dataset.stock) {
+        if (selectedOption && selectedOption.value) {
             const availableStock = parseInt(selectedOption.dataset.stock);
-            const requestedQuantity = parseInt(e.target.value);
+            const promoMin = parseInt(selectedOption.dataset.promoMin) || 0;
+            const promoFree = parseInt(selectedOption.dataset.promoFree) || 0;
+            const promoId = selectedOption.dataset.promoId;
             
-            if (requestedQuantity > availableStock) {
-                alert(`الكمية المطلوبة (${requestedQuantity}) أكبر من المتوفر (${availableStock})`);
-                e.target.value = availableStock;
+            const freeInput = row.querySelector('.free-quantity-input');
+            const promoIdInput = row.querySelector('.promotion-id-input');
+            const promoAlert = row.querySelector('.promo-alert');
+            const promoText = row.querySelector('.promo-text');
+            
+            // تحقق من العرض
+            if (promoMin > 0 && quantity >= promoMin) {
+                freeInput.value = promoFree;
+                promoIdInput.value = promoId;
+                promoText.textContent = `مبروك! لديك ${promoFree} قطعة مجانية`;
+                promoAlert.style.display = 'block';
+            } else {
+                freeInput.value = 0;
+                promoIdInput.value = '';
+                promoAlert.style.display = 'none';
+            }
+            
+            // تحقق من المخزون
+            const totalQty = quantity + parseInt(freeInput.value);
+            if (totalQty > availableStock) {
+                alert(`الكمية الإجمالية (${totalQty}) أكبر من المتوفر (${availableStock})`);
+                e.target.value = availableStock - parseInt(freeInput.value);
             }
         }
     }
