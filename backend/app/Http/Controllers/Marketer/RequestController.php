@@ -9,6 +9,7 @@ use App\Models\MarketerRequestItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class RequestController extends Controller
 {
@@ -16,7 +17,6 @@ class RequestController extends Controller
     {
         $marketerId = Auth::id();
         
-        // موثق - له delivery_confirmation
         $documentedRequests = MarketerRequest::with(['items.product', 'status.keeper'])
             ->where('marketer_id', $marketerId)
             ->whereHas('status', function($q) {
@@ -30,7 +30,6 @@ class RequestController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
             
-        // في انتظار التوثيق - موافق عليه ولكن لا يوجد delivery_confirmation
         $waitingDocRequests = MarketerRequest::with(['items.product', 'status.keeper'])
             ->where('marketer_id', $marketerId)
             ->whereHas('status', function($q) {
@@ -44,7 +43,6 @@ class RequestController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
             
-        // في انتظار الموافقة - pending أو لا يوجد status
         $pendingRequests = MarketerRequest::with(['items.product', 'status.keeper'])
             ->where('marketer_id', $marketerId)
             ->where(function($q) {
@@ -56,7 +54,6 @@ class RequestController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
             
-        // مرفوضة - rejected أو cancelled
         $rejectedRequests = MarketerRequest::with(['items.product', 'status.keeper'])
             ->where('marketer_id', $marketerId)
             ->whereHas('status', function($q) {
@@ -137,5 +134,57 @@ class RequestController extends Controller
         $request->delete();
         
         return redirect()->route('marketer.requests.index')->with('success', 'تم إلغاء الطلب بنجاح');
+    }
+
+    public function printInvoice($id)
+    {
+        $request = MarketerRequest::with(['marketer', 'items.product', 'status.keeper'])
+            ->where('marketer_id', Auth::id())
+            ->findOrFail($id);
+
+        $documentInfo = DB::table('delivery_confirmation')
+            ->where('request_id', $id)
+            ->first();
+
+        $arabic = new \ArPHP\I18N\Arabic();
+
+        $data = [
+            'invoiceNumber' => $request->invoice_number,
+            'date' => \Carbon\Carbon::parse($request->created_at)->format('Y-m-d H:i'),
+            'marketerName' => $arabic->utf8Glyphs($request->marketer->full_name ?? 'غير محدد'),
+            'status' => $arabic->utf8Glyphs($request->status->status ?? 'قيد المراجعة'),
+            'keeperName' => $request->status && $request->status->keeper ? $arabic->utf8Glyphs($request->status->keeper->full_name) : '',
+            'statusDate' => $request->status ? \Carbon\Carbon::parse($request->status->updated_at)->format('Y-m-d H:i') : '',
+            'items' => $request->items->map(function($item) use ($arabic) {
+                return (object)[
+                    'name' => $arabic->utf8Glyphs($item->product->name),
+                    'quantity' => $item->quantity,
+                    'price' => $item->product->current_price,
+                    'total' => $item->quantity * $item->product->current_price
+                ];
+            }),
+            'total' => $request->items->sum(fn($item) => $item->quantity * $item->product->current_price),
+            'title' => $arabic->utf8Glyphs('فاتورة طلب بضاعة'),
+            'labels' => [
+                'invoiceNumber' => $arabic->utf8Glyphs('رقم الفاتورة'),
+                'date' => $arabic->utf8Glyphs('تاريخ الطلب'),
+                'marketer' => $arabic->utf8Glyphs('اسم المسوق'),
+                'status' => $arabic->utf8Glyphs('حالة الطلب'),
+                'keeper' => $arabic->utf8Glyphs('أمين المخزن'),
+                'statusDate' => $arabic->utf8Glyphs('تاريخ المعالجة'),
+                'product' => $arabic->utf8Glyphs('اسم المنتج'),
+                'quantity' => $arabic->utf8Glyphs('الكمية'),
+                'price' => $arabic->utf8Glyphs('السعر'),
+                'total' => $arabic->utf8Glyphs('الإجمالي'),
+                'grandTotal' => $arabic->utf8Glyphs('الإجمالي الكلي'),
+                'currency' => $arabic->utf8Glyphs('دينار'),
+                'marketerSign' => $arabic->utf8Glyphs('توقيع المسوق'),
+                'keeperSign' => $arabic->utf8Glyphs('توقيع أمين المخزن'),
+            ]
+        ];
+
+        $pdf = Pdf::loadView('marketer.requests.invoice-pdf', $data)->setPaper('a4');
+
+        return $pdf->download('invoice-' . $request->invoice_number . '.pdf');
     }
 }

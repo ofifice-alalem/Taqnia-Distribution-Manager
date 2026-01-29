@@ -32,6 +32,7 @@ Route::middleware(['auth', 'role:salesman'])->prefix('marketer')->name('marketer
     Route::post('/requests', [MarketerRequestController::class, 'store'])->name('requests.store');
     Route::get('/requests/{id}', [MarketerRequestController::class, 'show'])->name('requests.show');
     Route::get('/requests/{id}/cancel', [MarketerRequestController::class, 'cancel'])->name('requests.cancel');
+    Route::get('/requests/{id}/print', [MarketerRequestController::class, 'printInvoice'])->name('requests.print');
 });
 
 // Warehouse Keeper Routes

@@ -15,6 +15,10 @@
                     <i class="bi bi-arrow-right"></i> رجوع للقائمة
                 </a>
                 
+                <a href="{{ route('marketer.requests.print', $request->id) }}" class="btn btn-primary w-100 mb-2" target="_blank">
+                    <i class="bi bi-printer"></i> طباعة الفاتورة
+                </a>
+                
                 @if(!$request->status || $request->status->status == 'pending')
                     <button type="button" class="btn btn-danger w-100" onclick="cancelRequest({{ $request->id }})">
                         <i class="bi bi-x-circle"></i> إلغاء الطلب
