@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Stores;
 use App\Http\Controllers\Controller;
 use App\Models\Store\Store;
 use App\Models\Debt\StoreDebtLedger;
+use App\Models\Sales\SalesInvoice;
 use Illuminate\Support\Facades\DB;
 
 class StoreController extends Controller
@@ -26,6 +27,25 @@ class StoreController extends Controller
                 return $store;
             });
 
-        return view('admin.stores.index', compact('stores'));
+        // جلب الفواتير التي تحتوي على هدايا
+        $promotionInvoices = SalesInvoice::with(['store', 'items.promotion'])
+            ->whereHas('items', function($query) {
+                $query->where('free_quantity', '>', 0);
+            })
+            ->where('status', 'approved')
+            ->get()
+            ->map(function($invoice) {
+                // حساب السعر قبل التخفيض
+                $priceBeforeDiscount = $invoice->items->sum(function($item) {
+                    return ($item->quantity + $item->free_quantity) * $item->unit_price;
+                });
+                
+                $invoice->price_before_discount = $priceBeforeDiscount;
+                $invoice->discount_amount = $priceBeforeDiscount - $invoice->total_amount;
+                
+                return $invoice;
+            });
+
+        return view('admin.stores.index', compact('stores', 'promotionInvoices'));
     }
 }
