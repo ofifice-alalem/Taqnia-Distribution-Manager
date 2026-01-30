@@ -157,12 +157,10 @@ class RequestController extends Controller
             'items' => $request->items->map(function($item) use ($arabic) {
                 return (object)[
                     'name' => $arabic->utf8Glyphs($item->product->name),
-                    'quantity' => $item->quantity,
-                    'price' => $item->product->current_price,
-                    'total' => $item->quantity * $item->product->current_price
+                    'quantity' => $item->quantity
                 ];
             }),
-            'total' => $request->items->sum(fn($item) => $item->quantity * $item->product->current_price),
+            'totalQuantity' => $request->items->sum('quantity'),
             'title' => $arabic->utf8Glyphs('فاتورة طلب بضاعة'),
             'labels' => [
                 'invoiceNumber' => $arabic->utf8Glyphs('رقم الفاتورة'),
@@ -173,10 +171,7 @@ class RequestController extends Controller
                 'statusDate' => $arabic->utf8Glyphs('تاريخ المعالجة'),
                 'product' => $arabic->utf8Glyphs('اسم المنتج'),
                 'quantity' => $arabic->utf8Glyphs('الكمية'),
-                'price' => $arabic->utf8Glyphs('السعر'),
-                'total' => $arabic->utf8Glyphs('الإجمالي'),
-                'grandTotal' => $arabic->utf8Glyphs('الإجمالي الكلي'),
-                'currency' => $arabic->utf8Glyphs('دينار'),
+                'totalQuantity' => $arabic->utf8Glyphs('إجمالي عدد البضاعة'),
                 'marketerSign' => $arabic->utf8Glyphs('توقيع المسوق'),
                 'keeperSign' => $arabic->utf8Glyphs('توقيع أمين المخزن'),
             ]

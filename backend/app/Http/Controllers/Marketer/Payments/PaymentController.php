@@ -54,8 +54,10 @@ class PaymentController extends Controller
             ->filter(function($store) {
                 return $store->total_debt > 0;
             });
+        
+        $currentRate = Auth::user()->commission_rate ?? 0;
             
-        return view('marketer.payments.create', compact('stores'));
+        return view('marketer.payments.create', compact('stores', 'currentRate'));
     }
 
     public function store(Request $request)
@@ -83,7 +85,11 @@ class PaymentController extends Controller
             ->where('marketer_id', Auth::id())
             ->findOrFail($id);
 
-        return view('marketer.payments.show', compact('payment'));
+        $commission = \App\Models\Commission\MarketerCommission::where('payment_id', $id)->first();
+        $currentRate = Auth::user()->commission_rate ?? 0;
+        $expectedProfit = ($payment->amount * $currentRate) / 100;
+
+        return view('marketer.payments.show', compact('payment', 'commission', 'currentRate', 'expectedProfit'));
     }
 
     public function cancel($id)

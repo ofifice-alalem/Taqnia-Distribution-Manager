@@ -134,6 +134,26 @@
                                 <th>تاريخ الإنشاء</th>
                                 <td>{{ $payment->created_at }}</td>
                             </tr>
+                            <tr>
+                                <th>نسبة العمولة</th>
+                                <td>
+                                    @if($payment->status == 'approved' && $commission)
+                                        <span class="badge bg-info">{{ $commission->commission_rate }}%</span>
+                                    @else
+                                        <span class="badge bg-info">{{ $currentRate }}%</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>الربح {{ $payment->status == 'approved' ? '' : 'المتوقع' }}</th>
+                                <td>
+                                    @if($payment->status == 'approved' && $commission)
+                                        <span class="badge bg-success" style="font-size: 14px;">{{ number_format($commission->commission_amount, 2) }} ريال</span>
+                                    @else
+                                        <span class="badge bg-warning" style="font-size: 14px;">{{ number_format($expectedProfit, 2) }} ريال</span>
+                                    @endif
+                                </td>
+                            </tr>
                             @if($payment->status == 'approved')
                                 <tr>
                                     <th>تاريخ التوثيق</th>

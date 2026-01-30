@@ -8,6 +8,8 @@ use App\Http\Controllers\Marketer\Returns\ReturnController as MarketerReturnCont
 use App\Http\Controllers\Marketer\Sales\SalesInvoiceController;
 use App\Http\Controllers\Marketer\Promotions\PromotionController as MarketerPromotionController;
 use App\Http\Controllers\Marketer\Payments\PaymentController as MarketerPaymentController;
+use App\Http\Controllers\MarketerWithdrawalController;
+use App\Http\Controllers\AdminWithdrawalController;
 use App\Http\Controllers\Warehouse\RequestController as WarehouseRequestController;
 use App\Http\Controllers\Warehouse\Returns\ReturnController as WarehouseReturnController;
 use App\Http\Controllers\Warehouse\Sales\SalesConfirmationController;
@@ -76,6 +78,12 @@ Route::middleware(['auth', 'role:salesman'])->prefix('marketer')->name('marketer
     Route::get('/payments/{id}/cancel', [MarketerPaymentController::class, 'cancel'])->name('payments.cancel');
     Route::get('/payments-received', [MarketerPaymentController::class, 'received'])->name('payments.received');
     Route::get('/my-profits', [MarketerPaymentController::class, 'myProfits'])->name('my-profits');
+    
+    // Withdrawal Routes
+    Route::get('/withdrawals', [MarketerWithdrawalController::class, 'index'])->name('withdrawals.index');
+    Route::post('/withdrawals', [MarketerWithdrawalController::class, 'store'])->name('withdrawals.store');
+    Route::post('/withdrawals/{id}/cancel', [MarketerWithdrawalController::class, 'cancel'])->name('withdrawals.cancel');
+    Route::get('/withdrawals/{id}/print', [MarketerWithdrawalController::class, 'print'])->name('withdrawals.print');
 });
 
 // Warehouse Keeper Routes
@@ -131,6 +139,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/commissions', [\App\Http\Controllers\Admin\Commissions\CommissionController::class, 'index'])->name('commissions.index');
     Route::get('/commissions/settings', [\App\Http\Controllers\Admin\Commissions\CommissionController::class, 'settings'])->name('commissions.settings');
     Route::post('/commissions/{id}/update-rate', [\App\Http\Controllers\Admin\Commissions\CommissionController::class, 'updateRate'])->name('commissions.update-rate');
+    
+    // Withdrawal Routes
+    Route::get('/withdrawals', [AdminWithdrawalController::class, 'index'])->name('withdrawals.index');
+    Route::get('/withdrawals/{id}', [AdminWithdrawalController::class, 'show'])->name('withdrawals.show');
+    Route::post('/withdrawals/{id}/approve', [AdminWithdrawalController::class, 'approve'])->name('withdrawals.approve');
+    Route::post('/withdrawals/{id}/reject', [AdminWithdrawalController::class, 'reject'])->name('withdrawals.reject');
 });
 
 // Legacy Routes (للتوافق المؤقت)

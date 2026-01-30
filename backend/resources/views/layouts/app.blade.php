@@ -673,6 +673,7 @@
                         <li><a href="{{ route('marketer.payments.index') }}" class="nav-link {{ request()->routeIs('marketer.payments.*') && !request()->routeIs('marketer.payments.received') && !request()->routeIs('marketer.my-profits') ? 'active' : '' }}"><i class="bi bi-cash-coin"></i> <span>إيصالات القبض</span></a></li>
                         <li><a href="{{ route('marketer.payments.received') }}" class="nav-link {{ request()->routeIs('marketer.payments.received') ? 'active' : '' }}"><i class="bi bi-cash-stack"></i> <span>الإيصالات المستلمة</span></a></li>
                         <li><a href="{{ route('marketer.my-profits') }}" class="nav-link {{ request()->routeIs('marketer.my-profits') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> <span>أرباحي</span></a></li>
+                        <li><a href="{{ route('marketer.withdrawals.index') }}" class="nav-link {{ request()->routeIs('marketer.withdrawals.*') ? 'active' : '' }}"><i class="bi bi-wallet2"></i> <span>سحب الأرباح</span></a></li>
                         <li><a href="{{ route('marketer.returns.index') }}" class="nav-link {{ request()->routeIs('marketer.returns.*') ? 'active' : '' }}"><i class="bi bi-arrow-return-left"></i> <span>إرجاع بضاعة</span></a></li>
                         @endif
                     @endauth
@@ -695,6 +696,7 @@
                     <ul>
                         <li><a href="{{ route('admin.promotions.index') }}" class="nav-link {{ request()->routeIs('admin.promotions.*') ? 'active' : '' }}"><i class="bi bi-gift"></i> <span>عروض التخفيض</span></a></li>
                         <li><a href="{{ route('admin.commissions.index') }}" class="nav-link {{ request()->routeIs('admin.commissions.*') ? 'active' : '' }}"><i class="bi bi-percent"></i> <span>عمولات المسوقين</span></a></li>
+                        <li><a href="{{ route('admin.withdrawals.index') }}" class="nav-link {{ request()->routeIs('admin.withdrawals.*') ? 'active' : '' }}"><i class="bi bi-wallet2"></i> <span>طلبات سحب الأرباح</span></a></li>
                         <li><a href="#" class="nav-link"><i class="bi bi-people"></i> <span>المستخدمين</span></a></li>
                         <li><a href="#" class="nav-link"><i class="bi bi-box-seam"></i> <span>المنتجات</span></a></li>
                         <li><a href="{{ route('admin.stores.index') }}" class="nav-link {{ request()->routeIs('admin.stores.*') ? 'active' : '' }}"><i class="bi bi-shop"></i> <span>المتاجر</span></a></li>

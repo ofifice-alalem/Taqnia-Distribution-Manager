@@ -47,7 +47,7 @@
                     <label for="amount" class="form-label">المبلغ <span class="text-danger">*</span></label>
                     <input type="number" step="0.01" name="amount" id="amount" 
                            class="form-control @error('amount') is-invalid @enderror" 
-                           value="{{ old('amount') }}" required>
+                           value="{{ old('amount') }}" required onkeyup="calculateProfit()">
                     @error('amount')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -64,6 +64,18 @@
                     @error('payment_method')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                </div>
+            </div>
+
+            <!-- Commission Info -->
+            <div class="alert alert-success" id="commissionInfo" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>نسبة العمولة:</strong> <span class="badge bg-info">{{ $currentRate }}%</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>الربح المتوقع:</strong> <span class="badge bg-success" id="expectedProfit">0.00 ريال</span>
+                    </div>
                 </div>
             </div>
 
@@ -118,5 +130,18 @@ function updateDebt() {
 document.addEventListener('DOMContentLoaded', function() {
     updateDebt();
 });
+
+function calculateProfit() {
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const rate = {{ $currentRate }};
+    const profit = (amount * rate) / 100;
+    
+    if (amount > 0) {
+        document.getElementById('expectedProfit').textContent = profit.toFixed(2) + ' ريال';
+        document.getElementById('commissionInfo').style.display = 'block';
+    } else {
+        document.getElementById('commissionInfo').style.display = 'none';
+    }
+}
 </script>
 @endsection

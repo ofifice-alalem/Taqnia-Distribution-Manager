@@ -41,9 +41,6 @@
         <div class="info-row">
             {{ $date }} :<span class="label">{{ $labels['date'] }}</span>
         </div>
-        <div class="info-row">
-            {{ $status }} :<span class="label">{{ $labels['status'] }}</span>
-        </div>
         @if($keeperName)
         <div class="info-row">
             {{ $keeperName }} :<span class="label">{{ $labels['keeper'] }}</span>
@@ -54,8 +51,6 @@
     <table>
         <thead>
             <tr>
-                <th>{{ $labels['total'] }}</th>
-                <th>{{ $labels['price'] }}</th>
                 <th>{{ $labels['quantity'] }}</th>
                 <th>{{ $labels['product'] }}</th>
                 <th>#</th>
@@ -64,16 +59,14 @@
         <tbody>
             @foreach($items as $index => $item)
             <tr>
-                <td>{{ $labels['currency'] }} {{ number_format($item->total, 2) }}</td>
-                <td>{{ $labels['currency'] }} {{ number_format($item->price, 2) }}</td>
                 <td>{{ $item->quantity }}</td>
                 <td>{{ $item->name }}</td>
                 <td>{{ $index + 1 }}</td>
             </tr>
             @endforeach
             <tr class="total-row">
-                <td>{{ $labels['currency'] }} {{ number_format($total, 2) }}</td>
-                <td colspan="4">{{ $labels['grandTotal'] }}</td>
+                <td>{{ $totalQuantity }}</td>
+                <td colspan="2">{{ $labels['totalQuantity'] }}</td>
             </tr>
         </tbody>
     </table>
