@@ -209,7 +209,8 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="row">
+                <!-- Desktop Grid -->
+                <div class="row d-none d-md-flex">
                     @forelse($pendingProducts as $product)
                         <div class="col-md-3 mb-3">
                             <div class="stock-item">
@@ -225,12 +226,33 @@
                         </div>
                     @endforelse
                 </div>
+
+                <!-- Mobile Cards -->
+                <div class="stock-cards d-md-none">
+                    @forelse($pendingProducts as $product)
+                        <div class="stock-card">
+                            <div class="stock-card-header">
+                                <div class="stock-card-title">
+                                    <i class="bi bi-box-seam"></i>
+                                    {{ $product->name }}
+                                </div>
+                                <span class="stock-quantity">{{ number_format($product->total_quantity) }}</span>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>لا توجد منتجات محجوزة</p>
+                        </div>
+                    @endforelse
+                </div>
             </div>
         </div>
         
         <div class="card">
             <div class="card-body">
-                <div class="modern-table">
+                <!-- Desktop Table -->
+                <div class="modern-table d-none d-md-block">
                     <table>
                         <thead>
                             <tr>
@@ -238,7 +260,7 @@
                                 <th>المتجر</th>
                                 <th>التاريخ</th>
                                 <th>الإجمالي</th>
-                                <th>الإجراءات</th>
+                                <th style="width: 100px;">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -249,7 +271,7 @@
                                 <td>{{ $invoice->created_at->format('Y-m-d') }}</td>
                                 <td><strong>{{ number_format($invoice->total_amount, 2) }} د.ع</strong></td>
                                 <td>
-                                    <a href="{{ route('marketer.sales.show', $invoice->id) }}" class="btn btn-sm btn-primary">
+                                    <a href="{{ route('marketer.sales.show', $invoice->id) }}" class="btn btn-sm btn-primary w-100" title="عرض">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                 </td>
@@ -266,6 +288,38 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile Cards -->
+                <div class="invoice-cards d-md-none">
+                    @forelse($pendingInvoices as $invoice)
+                        <div class="invoice-card">
+                            <div class="invoice-card-header">
+                                <div class="invoice-number">#{{ $invoice->invoice_number }}</div>
+                                <span class="invoice-date">{{ $invoice->created_at->format('Y-m-d') }}</span>
+                            </div>
+                            <div class="invoice-card-body">
+                                <div class="invoice-info">
+                                    <span class="label">المتجر:</span>
+                                    <span class="value">{{ $invoice->store->name }}</span>
+                                </div>
+                                <div class="invoice-info">
+                                    <span class="label">الإجمالي:</span>
+                                    <span class="value"><strong>{{ number_format($invoice->total_amount, 2) }} د.ع</strong></span>
+                                </div>
+                            </div>
+                            <div class="invoice-card-footer">
+                                <a href="{{ route('marketer.sales.show', $invoice->id) }}" class="btn btn-sm btn-primary w-100">
+                                    <i class="bi bi-eye"></i> عرض التفاصيل
+                                </a>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>لا توجد فواتير بانتظار التوثيق</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -521,6 +575,72 @@
     border-radius: var(--radius-sm);
     font-weight: 700;
     font-size: 0.9em;
+}
+
+/* Invoice Cards */
+.invoice-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.invoice-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.invoice-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+}
+
+.invoice-number {
+    font-weight: 700;
+    color: var(--text-heading);
+    font-size: 15px;
+}
+
+.invoice-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--bg-main);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.invoice-card-body {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.invoice-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.invoice-info .label {
+    color: var(--text-muted);
+}
+
+.invoice-info .value {
+    color: var(--text-main);
+}
+
+.invoice-card-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
 }
 </style>
 @endsection

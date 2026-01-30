@@ -70,7 +70,8 @@
 <div class="tab-content" id="withdrawalsTabsContent">
     <!-- Requests Tab -->
     <div class="tab-pane fade show active" id="requests" role="tabpanel">
-        <div class="table-responsive">
+        <!-- Desktop Table -->
+        <div class="table-responsive d-none d-md-block">
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -125,11 +126,62 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Mobile Cards -->
+        <div class="withdrawal-cards d-md-none">
+            @forelse($requests as $request)
+                <div class="withdrawal-card">
+                    <div class="withdrawal-card-header">
+                        <div class="withdrawal-number">#{{ $request->id }}</div>
+                        <div>
+                            @if($request->status === 'pending')
+                                <span class="badge bg-warning">في الانتظار</span>
+                            @elseif($request->status === 'approved')
+                                <span class="badge bg-success">موافق عليه</span>
+                            @elseif($request->status === 'rejected')
+                                <span class="badge bg-danger">مرفوض</span>
+                            @else
+                                <span class="badge bg-secondary">ملغى</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="withdrawal-card-body">
+                        <div class="withdrawal-info">
+                            <span class="label">المبلغ المطلوب:</span>
+                            <span class="value fw-bold">{{ number_format($request->requested_amount, 2) }} ريال</span>
+                        </div>
+                        <div class="withdrawal-info">
+                            <span class="label">تاريخ الطلب:</span>
+                            <span class="value">{{ $request->created_at->format('Y-m-d H:i') }}</span>
+                        </div>
+                    </div>
+                    <div class="withdrawal-card-footer">
+                        <a href="{{ route('marketer.withdrawals.print', $request->id) }}" class="btn btn-sm btn-primary" target="_blank">
+                            <i class="bi bi-printer"></i> طباعة
+                        </a>
+                        @if($request->status === 'pending')
+                        <form action="{{ route('marketer.withdrawals.cancel', $request->id) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من إلغاء الطلب؟')">
+                                <i class="bi bi-x-circle"></i> إلغاء
+                            </button>
+                        </form>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    لا توجد طلبات سحب
+                </div>
+            @endforelse
+        </div>
     </div>
     
     <!-- Withdrawals Tab -->
     <div class="tab-pane fade" id="withdrawals" role="tabpanel">
-        <div class="table-responsive">
+        <!-- Desktop Table -->
+        <div class="table-responsive d-none d-md-block">
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -163,6 +215,42 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="withdrawal-cards d-md-none">
+            @forelse($withdrawals as $withdrawal)
+                <div class="withdrawal-card approved">
+                    <div class="withdrawal-card-header">
+                        <div class="withdrawal-number">#{{ $withdrawal->request->id }}</div>
+                        <span class="badge bg-success">موثق</span>
+                    </div>
+                    <div class="withdrawal-card-body">
+                        <div class="withdrawal-info">
+                            <span class="label">المبلغ:</span>
+                            <span class="value fw-bold text-success">{{ number_format($withdrawal->amount, 2) }} ريال</span>
+                        </div>
+                        <div class="withdrawal-info">
+                            <span class="label">تاريخ التوثيق:</span>
+                            <span class="value">{{ $withdrawal->confirmed_at->format('Y-m-d H:i') }}</span>
+                        </div>
+                        <div class="withdrawal-info">
+                            <span class="label">المسؤول:</span>
+                            <span class="value">{{ $withdrawal->admin->full_name }}</span>
+                        </div>
+                    </div>
+                    <div class="withdrawal-card-footer">
+                        <a href="{{ asset('storage/' . $withdrawal->signed_receipt_image) }}" target="_blank" class="btn btn-sm btn-primary w-100">
+                            <i class="bi bi-file-earmark-image"></i> عرض الإيصال
+                        </a>
+                    </div>
+                </div>
+            @empty
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    لا توجد سحوبات موثقة
+                </div>
+            @endforelse
         </div>
     </div>
 </div>
@@ -311,6 +399,76 @@
     border-color: var(--border) !important;
     padding: 15px;
     vertical-align: middle;
+}
+
+/* Withdrawal Cards */
+.withdrawal-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.withdrawal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.withdrawal-card.approved {
+    border-right: 4px solid #10b981;
+}
+
+.withdrawal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+}
+
+.withdrawal-number {
+    font-weight: 700;
+    color: var(--text-heading);
+    font-size: 15px;
+}
+
+.withdrawal-card-body {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.withdrawal-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.withdrawal-info .label {
+    color: var(--text-muted);
+}
+
+.withdrawal-info .value {
+    color: var(--text-main);
+}
+
+.withdrawal-card-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
+    display: flex;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .withdrawal-cards {
+        padding-bottom: 80px;
+    }
 }
 </style>
 @endsection
