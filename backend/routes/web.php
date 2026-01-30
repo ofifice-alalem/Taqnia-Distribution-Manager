@@ -11,6 +11,7 @@ use App\Http\Controllers\Warehouse\RequestController as WarehouseRequestControll
 use App\Http\Controllers\Warehouse\Returns\ReturnController as WarehouseReturnController;
 use App\Http\Controllers\Warehouse\Sales\SalesConfirmationController;
 use App\Http\Controllers\Admin\Promotions\PromotionController;
+use App\Http\Controllers\Admin\Stores\StoreController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 
@@ -96,6 +97,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/promotions/{id}', [PromotionController::class, 'update'])->name('promotions.update');
     Route::post('/promotions/{id}/toggle', [PromotionController::class, 'toggleStatus'])->name('promotions.toggle');
     Route::delete('/promotions/{id}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
+    
+    Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
 });
 
 // Legacy Routes (للتوافق المؤقت)

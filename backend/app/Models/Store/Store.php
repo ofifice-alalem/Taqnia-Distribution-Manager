@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Store extends Model
 {
+    public $timestamps = false;
+    
+    const CREATED_AT = 'created_at';
+    
     protected $fillable = [
         'name',
         'owner_name',
@@ -27,5 +31,10 @@ class Store extends Model
     public function actualStock()
     {
         return $this->hasMany(\App\Models\Stock\StoreActualStock::class, 'store_id');
+    }
+
+    public function debtLedger()
+    {
+        return $this->hasMany(\App\Models\Debt\StoreDebtLedger::class, 'store_id');
     }
 }
