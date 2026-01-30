@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Marketer;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Sales\SalesInvoice;
 
 class StockController extends Controller
 {
@@ -38,6 +39,25 @@ class StockController extends Controller
             )
             ->get();
         
-        return view('marketer.stock.index', compact('actualStock', 'reservedStock'));
+        // جلب الفواتير غير الموثقة
+        $pendingInvoices = SalesInvoice::with(['store', 'items.product'])
+            ->where('marketer_id', $marketerId)
+            ->where('status', 'pending')
+            ->get();
+        
+        // حساب المنتجات المحجوزة في الفواتير
+        $pendingProducts = DB::table('sales_invoice_items')
+            ->join('sales_invoices', 'sales_invoice_items.invoice_id', '=', 'sales_invoices.id')
+            ->join('products', 'sales_invoice_items.product_id', '=', 'products.id')
+            ->where('sales_invoices.marketer_id', $marketerId)
+            ->where('sales_invoices.status', 'pending')
+            ->select(
+                'products.name',
+                DB::raw('SUM(sales_invoice_items.quantity + sales_invoice_items.free_quantity) as total_quantity')
+            )
+            ->groupBy('products.id', 'products.name')
+            ->get();
+        
+        return view('marketer.stock.index', compact('actualStock', 'reservedStock', 'pendingInvoices', 'pendingProducts'));
     }
 }

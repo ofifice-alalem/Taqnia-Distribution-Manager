@@ -82,6 +82,16 @@
                 <td>{{ $index + 1 }}</td>
             </tr>
             @endforeach
+            <tr>
+                <td>{{ $labels['currency'] }} {{ number_format($subtotal - $productDiscount, 2) }}</td>
+                <td colspan="5">{{ $labels['subtotal'] }}</td>
+            </tr>
+            @if($invoiceDiscount > 0)
+            <tr style="background-color: #dbeafe;">
+                <td style="background-color: #dbeafe; color: #1e40af;">- {{ $labels['currency'] }} {{ number_format($invoiceDiscount, 2) }}</td>
+                <td colspan="5" style="background-color: #dbeafe; color: #1e40af;">{{ $labels['invoiceDiscount'] }}</td>
+            </tr>
+            @endif
             <tr class="total-row">
                 <td>{{ $labels['currency'] }} {{ number_format($total, 2) }}</td>
                 <td colspan="5">{{ $labels['grandTotal'] }}</td>

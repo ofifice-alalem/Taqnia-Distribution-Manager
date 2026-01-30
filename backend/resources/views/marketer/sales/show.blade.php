@@ -142,8 +142,31 @@
                             @endforeach
                         </tbody>
                         <tfoot>
+                            <tr>
+                                <th colspan="4">المجموع الفرعي</th>
+                                <th>{{ number_format($invoice->subtotal, 2) }} د.ع</th>
+                            </tr>
+                            @if($invoice->product_discount > 0)
+                            <tr class="table-success">
+                                <th colspan="4"><i class="bi bi-gift"></i> تخفيض المنتجات (هدايا)</th>
+                                <th class="text-success">- {{ number_format($invoice->product_discount, 2) }} د.ع</th>
+                            </tr>
+                            @endif
+                            @if($invoice->invoice_discount_amount > 0)
+                            <tr class="table-info">
+                                <th colspan="4">
+                                    <i class="bi bi-percent"></i> تخفيض الفاتورة
+                                    @if($invoice->invoice_discount_type == 'percentage')
+                                        ({{ $invoice->invoice_discount_value }}%)
+                                    @else
+                                        (مبلغ ثابت)
+                                    @endif
+                                </th>
+                                <th class="text-info">- {{ number_format($invoice->invoice_discount_amount, 2) }} د.ع</th>
+                            </tr>
+                            @endif
                             <tr class="table-dark">
-                                <th colspan="4">الإجمالي</th>
+                                <th colspan="4"><i class="bi bi-cash-stack"></i> الإجمالي النهائي</th>
                                 <th>{{ number_format($invoice->total_amount, 2) }} د.ع</th>
                             </tr>
                         </tfoot>
@@ -180,6 +203,12 @@ function loadInvoiceImage() {
     
     const modal = new bootstrap.Modal(document.getElementById('imageModal'));
     modal.show();
+}
+
+function cancelInvoice(id) {
+    if(confirm('هل أنت متأكد من إلغاء هذه الفاتورة؟')) {
+        window.location.href = `/marketer/sales/${id}/cancel`;
+    }
 }
 </script>
 @endsection

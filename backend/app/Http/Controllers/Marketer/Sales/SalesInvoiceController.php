@@ -100,6 +100,9 @@ class SalesInvoiceController extends Controller
                     'total' => $item->quantity * $item->unit_price
                 ];
             }),
+            'subtotal' => $invoice->subtotal,
+            'productDiscount' => $invoice->product_discount,
+            'invoiceDiscount' => $invoice->invoice_discount_amount,
             'total' => $invoice->total_amount,
             'title' => $arabic->utf8Glyphs('فاتورة بيع'),
             'labels' => [
@@ -114,6 +117,9 @@ class SalesInvoiceController extends Controller
                 'discount' => $arabic->utf8Glyphs('التخفيض'),
                 'price' => $arabic->utf8Glyphs('السعر'),
                 'total' => $arabic->utf8Glyphs('الإجمالي'),
+                'subtotal' => $arabic->utf8Glyphs('المجموع'),
+                'productDiscount' => $arabic->utf8Glyphs('تخفيض المنتجات'),
+                'invoiceDiscount' => $arabic->utf8Glyphs('تخفيض الفاتورة'),
                 'grandTotal' => $arabic->utf8Glyphs('الإجمالي الكلي'),
                 'currency' => $arabic->utf8Glyphs('دينار'),
             ]

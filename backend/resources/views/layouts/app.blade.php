@@ -670,6 +670,9 @@
                         <li><a href="{{ route('marketer.stock') }}" class="nav-link {{ request()->routeIs('marketer.stock') ? 'active' : '' }}"><i class="bi bi-box-seam"></i> <span>مخزوني</span></a></li>
                         <li><a href="{{ route('marketer.promotions.index') }}" class="nav-link {{ request()->routeIs('marketer.promotions.*') ? 'active' : '' }}"><i class="bi bi-gift"></i> <span>التخفيضات</span></a></li>
                         <li><a href="{{ route('marketer.sales.index') }}" class="nav-link {{ request()->routeIs('marketer.sales.*') ? 'active' : '' }}"><i class="bi bi-receipt"></i> <span>فواتير البيع</span></a></li>
+                        <li><a href="{{ route('marketer.payments.index') }}" class="nav-link {{ request()->routeIs('marketer.payments.*') && !request()->routeIs('marketer.payments.received') && !request()->routeIs('marketer.my-profits') ? 'active' : '' }}"><i class="bi bi-cash-coin"></i> <span>إيصالات القبض</span></a></li>
+                        <li><a href="{{ route('marketer.payments.received') }}" class="nav-link {{ request()->routeIs('marketer.payments.received') ? 'active' : '' }}"><i class="bi bi-cash-stack"></i> <span>الإيصالات المستلمة</span></a></li>
+                        <li><a href="{{ route('marketer.my-profits') }}" class="nav-link {{ request()->routeIs('marketer.my-profits') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> <span>أرباحي</span></a></li>
                         <li><a href="{{ route('marketer.returns.index') }}" class="nav-link {{ request()->routeIs('marketer.returns.*') ? 'active' : '' }}"><i class="bi bi-arrow-return-left"></i> <span>إرجاع بضاعة</span></a></li>
                         @endif
                     @endauth
@@ -682,6 +685,7 @@
                         <li><a href="#" class="nav-link"><i class="bi bi-building"></i> <span>المخزن الرئيسي</span></a></li>
                         <li><a href="#" class="nav-link"><i class="bi bi-truck"></i> <span>فواتير المصنع</span></a></li>
                         <li><a href="{{ route('warehouse.sales.index') }}" class="nav-link {{ request()->routeIs('warehouse.sales.*') ? 'active' : '' }}"><i class="bi bi-receipt-cutoff"></i> <span>توثيق البيع</span></a></li>
+                        <li><a href="{{ route('warehouse.payments.index') }}" class="nav-link {{ request()->routeIs('warehouse.payments.*') ? 'active' : '' }}"><i class="bi bi-cash-coin"></i> <span>توثيق إيصالات القبض</span></a></li>
                         <li><a href="{{ route('warehouse.returns.index') }}" class="nav-link {{ request()->routeIs('warehouse.returns.*') ? 'active' : '' }}"><i class="bi bi-arrow-return-left"></i> <span>طلبات الإرجاع</span></a></li>
                     </ul>
                     @endif
@@ -690,6 +694,7 @@
                     <div class="nav-group">الإدارة</div>
                     <ul>
                         <li><a href="{{ route('admin.promotions.index') }}" class="nav-link {{ request()->routeIs('admin.promotions.*') ? 'active' : '' }}"><i class="bi bi-gift"></i> <span>عروض التخفيض</span></a></li>
+                        <li><a href="{{ route('admin.commissions.index') }}" class="nav-link {{ request()->routeIs('admin.commissions.*') ? 'active' : '' }}"><i class="bi bi-percent"></i> <span>عمولات المسوقين</span></a></li>
                         <li><a href="#" class="nav-link"><i class="bi bi-people"></i> <span>المستخدمين</span></a></li>
                         <li><a href="#" class="nav-link"><i class="bi bi-box-seam"></i> <span>المنتجات</span></a></li>
                         <li><a href="{{ route('admin.stores.index') }}" class="nav-link {{ request()->routeIs('admin.stores.*') ? 'active' : '' }}"><i class="bi bi-shop"></i> <span>المتاجر</span></a></li>

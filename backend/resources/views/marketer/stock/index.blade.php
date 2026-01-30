@@ -52,6 +52,11 @@
             <i class="bi bi-hourglass-split"></i> المخزون المحجوز ({{ $reservedStock->count() }})
         </button>
     </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+            <i class="bi bi-clock-history"></i> فواتير بانتظار التوثيق ({{ $pendingInvoices->count() }})
+        </button>
+    </li>
 </ul>
 
 <div class="tab-content">
@@ -188,6 +193,79 @@
                             <p>لا يوجد مخزون محجوز</p>
                         </div>
                     @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-pane fade" id="pending">
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="icon-box bg-primary">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <h6 class="mb-0">المنتجات المحجوزة في الفواتير</h6>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @forelse($pendingProducts as $product)
+                        <div class="col-md-3 mb-3">
+                            <div class="stock-item">
+                                <div class="stock-info">
+                                    <div class="stock-name">{{ $product->name }}</div>
+                                </div>
+                                <div class="stock-quantity">{{ number_format($product->total_quantity) }}</div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-12">
+                            <p class="text-muted mb-0">لا توجد منتجات محجوزة</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <div class="modern-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>المتجر</th>
+                                <th>التاريخ</th>
+                                <th>الإجمالي</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($pendingInvoices as $invoice)
+                            <tr>
+                                <td><strong>#{{ $invoice->invoice_number }}</strong></td>
+                                <td>{{ $invoice->store->name }}</td>
+                                <td>{{ $invoice->created_at->format('Y-m-d') }}</td>
+                                <td><strong>{{ number_format($invoice->total_amount, 2) }} د.ع</strong></td>
+                                <td>
+                                    <a href="{{ route('marketer.sales.show', $invoice->id) }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" class="empty-cell">
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox"></i>
+                                        <p>لا توجد فواتير بانتظار التوثيق</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -398,6 +476,51 @@
 
 .stock-info .value {
     color: var(--text-main);
+}
+
+.icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1em;
+}
+
+.stock-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+
+.stock-item:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.stock-info {
+    flex: 1;
+}
+
+.stock-name {
+    font-weight: 600;
+    color: var(--text-heading);
+    margin-bottom: 2px;
+}
+
+.stock-quantity {
+    background: var(--primary);
+    color: white;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 0.9em;
 }
 </style>
 @endsection

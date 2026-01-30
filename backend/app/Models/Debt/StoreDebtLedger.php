@@ -28,4 +28,9 @@ class StoreDebtLedger extends Model
     {
         return $this->belongsTo(\App\Models\Sales\SalesInvoice::class, 'sales_invoice_id');
     }
+
+    public function payment()
+    {
+        return $this->belongsTo(\App\Models\Payment\StorePayment::class, 'payment_id');
+    }
 }

@@ -1,33 +1,31 @@
 <?php
 
-namespace App\Models\Sales;
+namespace App\Models\Commission;
 
 use Illuminate\Database\Eloquent\Model;
 
-class SalesInvoice extends Model
+class MarketerCommission extends Model
 {
+    public $timestamps = false;
+    
     protected $fillable = [
-        'invoice_number',
+        'payment_id',
         'marketer_id',
         'store_id',
-        'subtotal',
-        'product_discount',
-        'invoice_discount_type',
-        'invoice_discount_value',
-        'invoice_discount_amount',
-        'total_amount',
-        'status',
         'keeper_id',
-        'stamped_invoice_image',
-        'confirmed_at',
-        'notes'
+        'payment_amount',
+        'commission_rate',
+        'commission_amount',
+        'confirmed_at'
     ];
 
-    public $timestamps = true;
+    protected $casts = [
+        'confirmed_at' => 'datetime'
+    ];
 
-    public function items()
+    public function payment()
     {
-        return $this->hasMany(SalesInvoiceItem::class, 'invoice_id');
+        return $this->belongsTo(\App\Models\Payment\StorePayment::class, 'payment_id');
     }
 
     public function marketer()

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Promotions;
 
 use App\Http\Controllers\Controller;
 use App\Models\Promotion\ProductPromotion;
+use App\Models\Promotion\InvoiceDiscountTier;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,11 +17,13 @@ class PromotionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         
+        $discountTiers = InvoiceDiscountTier::orderBy('min_amount', 'asc')->get();
+        
         $products = Product::with('mainStock')
             ->where('is_active', true)
             ->get();
 
-        return view('admin.promotions.index', compact('promotions', 'products'));
+        return view('admin.promotions.index', compact('promotions', 'products', 'discountTiers'));
     }
 
     public function create()

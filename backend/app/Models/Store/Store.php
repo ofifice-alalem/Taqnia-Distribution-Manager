@@ -37,4 +37,9 @@ class Store extends Model
     {
         return $this->hasMany(\App\Models\Debt\StoreDebtLedger::class, 'store_id');
     }
+
+    public function getTotalDebtAttribute()
+    {
+        return $this->debtLedger()->sum('amount');
+    }
 }

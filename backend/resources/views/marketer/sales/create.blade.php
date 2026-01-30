@@ -78,6 +78,37 @@
                         </button>
                     </div>
 
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="summary-item">
+                                        <span class="summary-label">المجموع:</span>
+                                        <span class="summary-value" id="subtotalDisplay">0.00 د.ع</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3" id="productDiscountBox" style="display:none;">
+                                    <div class="summary-item discount">
+                                        <span class="summary-label">تخفيض المنتجات:</span>
+                                        <span class="summary-value" id="productDiscountDisplay">0.00 د.ع</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3" id="invoiceDiscountBox" style="display:none;">
+                                    <div class="summary-item discount">
+                                        <span class="summary-label">تخفيض الفاتورة:</span>
+                                        <span class="summary-value" id="invoiceDiscountDisplay">0.00 د.ع</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="summary-item total">
+                                        <span class="summary-label">الإجمالي:</span>
+                                        <span class="summary-value" id="totalDisplay">0.00 د.ع</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('marketer.sales.index') }}" class="btn btn-secondary">
                             <i class="bi bi-arrow-right"></i> رجوع
@@ -124,6 +155,55 @@ html[data-theme="dark"] .promo-info-box {
     background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
     border: 1px solid #3b82f6;
     color: #dbeafe;
+}
+
+.summary-item {
+    padding: 15px;
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.summary-item.discount {
+    background: #fef3c7;
+    border-color: #fde68a;
+}
+
+html[data-theme="dark"] .summary-item.discount {
+    background: #78350f;
+    border-color: #92400e;
+}
+
+html[data-theme="dark"] .summary-item.discount .summary-value {
+    color: #fef3c7;
+}
+
+.summary-item.total {
+    background: var(--primary-light);
+    border-color: var(--primary);
+}
+
+html[data-theme="dark"] .summary-item.total .summary-value {
+    color: #93c5fd;
+}
+
+.summary-label {
+    display: block;
+    font-size: 0.9em;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+}
+
+.summary-value {
+    display: block;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.summary-item.total .summary-value {
+    color: var(--primary);
 }
 </style>
 <script>
@@ -266,6 +346,90 @@ document.addEventListener('change', function(e) {
                 e.target.value = availableStock - parseInt(freeInput.value);
             }
         }
+    }
+});
+
+// حساب الإجمالي
+function calculateTotal() {
+    let subtotal = 0;
+    let productDiscount = 0;
+    
+    document.querySelectorAll('.product-row').forEach(row => {
+        const productSelect = row.querySelector('.product-select');
+        const quantityInput = row.querySelector('.quantity-input');
+        const freeInput = row.querySelector('.free-quantity-input');
+        
+        if (productSelect && productSelect.value && quantityInput && quantityInput.value) {
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            const price = parseFloat(selectedOption.dataset.price) || 0;
+            const quantity = parseInt(quantityInput.value) || 0;
+            const freeQty = parseInt(freeInput ? freeInput.value : 0) || 0;
+            
+            subtotal += (quantity + freeQty) * price;
+            productDiscount += freeQty * price;
+        }
+    });
+    
+    const afterProductDiscount = subtotal - productDiscount;
+    
+    console.log('Subtotal:', subtotal);
+    console.log('Product Discount:', productDiscount);
+    console.log('After Product Discount:', afterProductDiscount);
+    
+    // حساب التخفيض
+    fetch('/api/calculate-discount?amount=' + afterProductDiscount)
+        .then(response => response.json())
+        .then(data => {
+            console.log('API Response:', data);
+            const invoiceDiscount = parseFloat(data.discount) || 0;
+            const total = afterProductDiscount - invoiceDiscount;
+            
+            document.getElementById('subtotalDisplay').textContent = subtotal.toFixed(2) + ' د.ع';
+            
+            // عرض تخفيض المنتجات إذا وجد
+            if (productDiscount > 0) {
+                document.getElementById('productDiscountBox').style.display = 'block';
+                document.getElementById('productDiscountDisplay').textContent = productDiscount.toFixed(2) + ' د.ع';
+            } else {
+                document.getElementById('productDiscountBox').style.display = 'none';
+            }
+            
+            // عرض تخفيض الفاتورة إذا وجد
+            if (invoiceDiscount > 0) {
+                document.getElementById('invoiceDiscountBox').style.display = 'block';
+                document.getElementById('invoiceDiscountDisplay').textContent = invoiceDiscount.toFixed(2) + ' د.ع';
+            } else {
+                document.getElementById('invoiceDiscountBox').style.display = 'none';
+            }
+            
+            document.getElementById('totalDisplay').textContent = total.toFixed(2) + ' د.ع';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('subtotalDisplay').textContent = subtotal.toFixed(2) + ' د.ع';
+            
+            if (productDiscount > 0) {
+                document.getElementById('productDiscountBox').style.display = 'block';
+                document.getElementById('productDiscountDisplay').textContent = productDiscount.toFixed(2) + ' د.ع';
+            } else {
+                document.getElementById('productDiscountBox').style.display = 'none';
+            }
+            
+            document.getElementById('invoiceDiscountBox').style.display = 'none';
+            document.getElementById('totalDisplay').textContent = afterProductDiscount.toFixed(2) + ' د.ع';
+        });
+}
+
+// تحديث عند تغيير الكمية أو المنتج
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('quantity-input')) {
+        calculateTotal();
+    }
+});
+
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('product-select')) {
+        calculateTotal();
     }
 });
 </script>

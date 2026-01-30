@@ -8,6 +8,7 @@ use App\Models\Stock\MarketerActualStock;
 use App\Models\Stock\StorePendingStock;
 use App\Models\Product;
 use App\Models\Promotion\ProductPromotion;
+use App\Models\Promotion\InvoiceDiscountTier;
 use Illuminate\Support\Facades\DB;
 
 class SalesInvoiceService
@@ -35,11 +36,17 @@ class SalesInvoiceService
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'marketer_id' => $marketer_id,
                 'store_id' => $store_id,
+                'subtotal' => 0,
+                'product_discount' => 0,
+                'invoice_discount_type' => null,
+                'invoice_discount_value' => 0,
+                'invoice_discount_amount' => 0,
                 'total_amount' => 0,
                 'status' => 'pending',
             ]);
 
-            $total = 0;
+            $subtotal = 0;
+            $product_discount = 0;
 
             // إضافة المنتجات
             foreach ($items as $item) {
@@ -51,12 +58,13 @@ class SalesInvoiceService
                 $unit_price = $product->current_price;
                 $total_quantity = $quantity + $free_quantity;
                 
-                // حساب السعر بعد التخفيض
-                $subtotal = $total_quantity * $unit_price;
-                $discount = $free_quantity * $unit_price;
-                $total_price = $subtotal - $discount;
+                // حساب السعر
+                $item_subtotal = $total_quantity * $unit_price;
+                $item_discount = $free_quantity * $unit_price;
+                $total_price = $quantity * $unit_price;
                 
-                $total += $total_price;
+                $subtotal += $item_subtotal;
+                $product_discount += $item_discount;
 
                 // حفظ تفاصيل الفاتورة
                 SalesInvoiceItem::create([
@@ -83,8 +91,41 @@ class SalesInvoiceService
                 ]);
             }
 
-            // تحديث المبلغ الإجمالي
-            $invoice->update(['total_amount' => $total]);
+            // حساب التخفيض على الفاتورة تلقائياً
+            $after_product_discount = $subtotal - $product_discount;
+            $invoice_discount_amount = 0;
+            $invoice_discount_value = 0;
+            $invoice_discount_type = null;
+            
+            // جلب التخفيض المناسب بناءً على المبلغ
+            $tier = InvoiceDiscountTier::where('is_active', true)
+                ->where('min_amount', '<=', $after_product_discount)
+                ->orderBy('min_amount', 'desc')
+                ->first();
+            
+            if ($tier) {
+                $invoice_discount_type = $tier->discount_type;
+                
+                if ($tier->discount_type === 'percentage') {
+                    $invoice_discount_value = $tier->discount_percentage;
+                    $invoice_discount_amount = ($after_product_discount * $tier->discount_percentage) / 100;
+                } else {
+                    $invoice_discount_value = $tier->discount_amount;
+                    $invoice_discount_amount = $tier->discount_amount;
+                }
+            }
+            
+            $total_amount = $after_product_discount - $invoice_discount_amount;
+
+            // تحديث الفاتورة
+            $invoice->update([
+                'subtotal' => $subtotal,
+                'product_discount' => $product_discount,
+                'invoice_discount_type' => $invoice_discount_type,
+                'invoice_discount_value' => $invoice_discount_value,
+                'invoice_discount_amount' => $invoice_discount_amount,
+                'total_amount' => $total_amount
+            ]);
 
             return $invoice->load('items.product', 'store', 'marketer');
         });

@@ -40,9 +40,9 @@
                                 <th>#</th>
                                 <th>اسم المتجر</th>
                                 <th>الهاتف</th>
+                                <th>الإجمالي</th>
                                 <th>ما تم دفعه</th>
                                 <th>الدين</th>
-                                <th>المتبقي</th>
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
@@ -68,13 +68,13 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="amount-badge paid">
-                                        {{ number_format($store->total_paid, 2) }} د.ع
+                                    <span class="amount-badge debt">
+                                        {{ number_format($store->remaining + $store->total_paid, 2) }} د.ع
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="amount-badge debt">
-                                        {{ number_format($store->total_debt - $store->total_returns, 2) }} د.ع
+                                    <span class="amount-badge paid">
+                                        {{ number_format($store->total_paid, 2) }} د.ع
                                     </span>
                                 </td>
                                 <td>
@@ -100,7 +100,7 @@
                                         <a href="#" class="btn btn-sm btn-secondary" title="تعديل">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a href="#" class="btn btn-sm btn-info" title="سجل الديون">
+                                        <a href="{{ route('admin.stores.ledger', $store->id) }}" class="btn btn-sm btn-info" title="سجل الديون">
                                             <i class="bi bi-journal-text"></i>
                                         </a>
                                     </div>
@@ -165,9 +165,21 @@
                                     <span class="invoice-number">#{{ $invoice->invoice_number }}</span>
                                 </td>
                                 <td>
-                                    <span class="promo-type-badge">
-                                        <i class="bi bi-gift"></i> منتجات
-                                    </span>
+                                    @if($invoice->product_discount > 0 && $invoice->invoice_discount_amount > 0)
+                                        <span class="promo-type-badge">
+                                            <i class="bi bi-gift"></i> منتجات + فاتورة
+                                        </span>
+                                    @elseif($invoice->product_discount > 0)
+                                        <span class="promo-type-badge">
+                                            <i class="bi bi-gift"></i> منتجات
+                                        </span>
+                                    @elseif($invoice->invoice_discount_amount > 0)
+                                        <span class="promo-type-badge" style="background: #dbeafe; color: #1e40af; border-color: #93c5fd;">
+                                            <i class="bi bi-percent"></i> تخفيض فاتورة
+                                        </span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="price-before">{{ number_format($invoice->price_before_discount, 2) }} د.ع</span>
