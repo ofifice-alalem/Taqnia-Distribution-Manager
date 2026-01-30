@@ -21,7 +21,7 @@ class CommissionController extends Controller
 
     public function settings()
     {
-        $marketers = User::where('role_id', 2)->get();
+        $marketers = User::where('role_id', 3)->get();
         return view('admin.commissions.settings', compact('marketers'));
     }
 
